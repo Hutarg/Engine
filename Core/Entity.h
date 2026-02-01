@@ -8,13 +8,13 @@
 #include "../Maths/Vector.h"
 #include "../Utils/TypeList.h"
 
+#include "../Graphics/Window.h"
+
 namespace blueberry
 {
 	class BLUEBERRY_API Transform
 	{
 	private:
-
-		struct Tranform_T;
 
 		Vector3 position;
 		Vector3 rotation;
@@ -37,12 +37,15 @@ namespace blueberry
 	private:
 
 		uint32_t windowIndex_; // Un sprite ne pourra être diplay que sur une fenêtre à la fois (au pire dupliquez le sprite)
+		uint32_t windowGeneration_;
 		uint32_t pipelineIndex_;
+		uint32_t pipelineGeneration_;
 		uint32_t textureIndex_; // 
+		uint32_t textureGeneration_;
 
 	public:
 
-		Sprite();
+		Sprite(Window window, Pipeline pipeline);
 
 	};
 
@@ -69,6 +72,8 @@ namespace blueberry
 		uint32_t generation_ = -1;
 
 		Entity(uint32_t index, uint32_t generation);
+
+		friend class Application;
 
 	public:
 

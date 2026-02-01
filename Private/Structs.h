@@ -40,19 +40,19 @@ namespace blueberry
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
-		int stagingBufferSize;
+		size_t stagingBufferSize;
 
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
-		int vertexBufferSize;
+		size_t vertexBufferSize;
 
 		VkBuffer indexBuffer;
 		VkDeviceMemory indexBufferMemory;
-		int indexBufferSize;
+		size_t indexBufferSize;
 
 		TypeList<VkBuffer> ssboBuffers;
 		TypeList<VkDeviceMemory> ssboBufferMemories;
-		TypeList<int> ssboBufferSizes;
+		TypeList<size_t> ssboBufferSizes;
 
 		TypeList<VkBuffer> uniformBuffers;
 		TypeList<VkDeviceMemory> uniformBufferMemories;

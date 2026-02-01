@@ -30,12 +30,14 @@ const blueberry::TypeList<const char*> deviceExtensions = {
 
 namespace blueberry
 {
-    bool Application::isRunning_ = false;
-	uint32_t Application::maxFramesInFlight_ = 3;
 	Application::Instance_T Application::instance_ = {};
 	Application::PhysicalDevice_T Application::physicalDevice_ = {};
 	Application::LogicalDevice_T Application::logicalDevice_ = {};
 	Application::Engine_T Application::engine_ = {};
+
+	bool Application::isRunning_ = false;
+	uint32_t Application::maxFramesInFlight_ = 3;
+	uint32_t Application::currentFrame_ = 0;
 
 	// Crée l'instance et le debug messenger
 	void Application::createInstance(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion)
@@ -457,7 +459,7 @@ namespace blueberry
 			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
 
-		engine_.ssboBufferSizes = TypeList<int>(maxFramesInFlight_);
+		engine_.ssboBufferSizes = TypeList<size_t>(maxFramesInFlight_);
 		engine_.ssboBuffers = TypeList<VkBuffer>(maxFramesInFlight_);
 		engine_.ssboBufferMemories = TypeList<VkDeviceMemory>(maxFramesInFlight_);
 
@@ -503,6 +505,10 @@ namespace blueberry
 
 		TypeList<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
 
+		int vertexBufferCurrentSize = vertices.size() * sizeof(Vertex);
+		int indexBufferCurrentSize = indices.size() * sizeof(indices[0]);
+		int ssboBufferCurrentSize = Entity::components_[Entity::getComponentTypeID<Transform>()].size() * sizeof(Transform);
+
 		for (Window::Window_T window : Window::windows_)
 		{
 			int width, height;
@@ -511,8 +517,10 @@ namespace blueberry
 			UBO ubo = { glm::lookAt(glm::vec3(0,0,1), glm::vec3(0,0,0), glm::vec3(0,1,0)),
 				glm::perspective(glm::radians(0.0f), (float)(width / height), 0.1f, 10.0f) };
 
-
+			memcpy(engine_.uniformBufferMaps[currentFrame_], &ubo, sizeof(ubo));
 		}
+
+		currentFrame_ = (currentFrame_ + 1) % maxFramesInFlight_;
 	}
 
 	void Application::init()

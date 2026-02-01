@@ -144,6 +144,7 @@
     <ClInclude Include="Core\Entity.h" />
     <ClInclude Include="Graphics\Pipeline.h" />
     <ClInclude Include="Graphics\Shader.h" />
+    <ClInclude Include="Maths\Matrix.h" />
     <ClInclude Include="Private\Functions.h" />
     <ClInclude Include="Private\Structs.h" />
     <ClInclude Include="Graphics\Window.h" />
