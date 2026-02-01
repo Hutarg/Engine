@@ -1,7 +1,7 @@
 # Engine
 
 ### Utilisation :
-Il peut être importé directement depuis un fichier c++ en important le fichier .dll.
+Il peut être importé directement depuis un fichier c++ en important les fichier .dll et .h
 
 ### TODO :
  - [ ] Dessiner les sprites dans la boucle principale
