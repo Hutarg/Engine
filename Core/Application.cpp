@@ -552,6 +552,8 @@ namespace blueberry
 				glfwSwapBuffers(window.window);
 			}
 
+
+
             glfwPollEvents();
         }
     }
