@@ -496,6 +496,8 @@ namespace blueberry
 
 	void Application::drawSprites()
 	{
+		//if (Entity::components_.size() <= Entity::getComponentTypeID<Transform>()) return;
+
 		TypeList<Vertex> vertices = {
 				{ {-0.5f, -0.5f, 0.0f}, {1, 1, 0}, {0, 0, 0} },
 				{ { 0.5f, -0.5f, 0.0f}, {0, 1, 1}, {1, 0, 0} },
@@ -505,19 +507,210 @@ namespace blueberry
 
 		TypeList<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
 
-		int vertexBufferCurrentSize = vertices.size() * sizeof(Vertex);
-		int indexBufferCurrentSize = indices.size() * sizeof(indices[0]);
-		int ssboBufferCurrentSize = Entity::components_[Entity::getComponentTypeID<Transform>()].size() * sizeof(Transform);
+		int vertexBufferSize = vertices.size() * sizeof(Vertex);
+		int indexBufferSize = indices.size() * sizeof(indices[0]);
+		int ssboBufferSize = Entity::components_[Entity::getComponentTypeID<Transform>()].size() * sizeof(Transform);
+		int stagingBufferSize = max(max(vertexBufferSize, indexBufferSize), ssboBufferSize);
 
-		for (Window::Window_T window : Window::windows_)
+		// Modification de la taille des buffers
+
+		if (stagingBufferSize > engine_.stagingBufferSize)
 		{
-			int width, height;
-			glfwGetFramebufferSize(window.window, &width, &height);
+			engine_.stagingBufferSize = stagingBufferSize;
 
-			UBO ubo = { glm::lookAt(glm::vec3(0,0,1), glm::vec3(0,0,0), glm::vec3(0,1,0)),
-				glm::perspective(glm::radians(0.0f), (float)(width / height), 0.1f, 10.0f) };
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferSize);
 
-			memcpy(engine_.uniformBufferMaps[currentFrame_], &ubo, sizeof(ubo));
+			vkBindBufferMemory(logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, 0);
+		}
+
+		if (vertexBufferSize > engine_.vertexBufferSize)
+		{
+			engine_.vertexBufferSize = vertexBufferSize;
+
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.vertexBuffer, engine_.vertexBufferMemory, 
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBufferSize);
+
+			vkBindBufferMemory(logicalDevice_.device, engine_.vertexBuffer, engine_.vertexBufferMemory, 0);
+		}
+
+		if (indexBufferSize > engine_.indexBufferSize)
+		{
+			engine_.indexBufferSize = indexBufferSize;
+
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.indexBuffer, engine_.indexBufferMemory,
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBufferSize);
+
+			vkBindBufferMemory(logicalDevice_.device, engine_.indexBuffer, engine_.indexBufferMemory, 0);
+		}
+
+		if (ssboBufferSize > engine_.ssboBufferSizes[currentFrame_])
+		{
+			engine_.ssboBufferSizes[currentFrame_] = ssboBufferSize;
+
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.ssboBuffers[currentFrame_], engine_.ssboBufferMemories[currentFrame_],
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ssboBufferSize);
+
+			vkBindBufferMemory(logicalDevice_.device, engine_.ssboBuffers[currentFrame_], engine_.ssboBufferMemories[currentFrame_], 0);
+
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.offset = 0;
+			bufferInfo.buffer = engine_.ssboBuffers[currentFrame_];
+			bufferInfo.range = VK_WHOLE_SIZE;
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = engine_.descriptorSets[currentFrame_];
+			descriptorWrite.dstBinding = 1;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+
+			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
+		}
+
+		// Ecriture des données dans les buffers
+
+		if (vertexBufferSize > 0)
+		{
+			void* data;
+			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, vertexBufferSize, 0, &data);
+			memcpy(data, vertices.data(), vertexBufferSize);
+			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
+
+			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.vertexBuffer, vertexBufferSize);
+		}
+
+		if (indexBufferSize > 0)
+		{
+			void* data;
+			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, indexBufferSize, 0, &data);
+			memcpy(data, indices.data(), indexBufferSize);
+			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
+
+			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.indexBuffer, indexBufferSize);
+		}
+
+		if (ssboBufferSize > 0)
+		{
+			void* data;
+			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, ssboBufferSize, 0, &data);
+			memcpy(data, Entity::components_[Entity::getComponentTypeID<Transform>()].data(), ssboBufferSize);
+			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
+
+			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool,
+				engine_.stagingBuffer, engine_.ssboBuffers[currentFrame_], ssboBufferSize);
+		}
+
+		for (Pipeline::Pipeline_T pipeline : Pipeline::pipelines_)
+		{
+			for (Window::Window_T window : Window::windows_)
+			{
+				int width, height;
+				glfwGetFramebufferSize(window.window, &width, &height);
+
+				UBO ubo = { glm::lookAt(glm::vec3(0,0,1), glm::vec3(0,0,0), glm::vec3(0,1,0)),
+					glm::perspective(glm::radians(0.0f), (float)(width / height), 0.1f, 10.0f) };
+
+				memcpy(engine_.uniformBufferMaps[currentFrame_], &ubo, sizeof(ubo));
+
+				vkWaitForFences(logicalDevice_.device, 1, &pipeline.inFlightFence, VK_TRUE, UINT64_MAX);
+				vkResetFences(logicalDevice_.device, 1, &pipeline.inFlightFence);
+
+				uint32_t imageIndex;
+				vkAcquireNextImageKHR(logicalDevice_.device, window.swapchain, UINT64_MAX, pipeline.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+				vkResetCommandBuffer(engine_.commandBuffer, 0);
+
+				// Enregistre le command buffer pour le rendu des entités
+
+				VkCommandBufferBeginInfo beginInfo{};
+				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+				if (vkBeginCommandBuffer(engine_.commandBuffer, &beginInfo) != VK_SUCCESS)
+				{
+					throw - 1;
+				}
+
+				VkRenderPassBeginInfo renderPassInfo{};
+				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				renderPassInfo.renderPass = Window::windowInfos_.renderPass;
+				renderPassInfo.framebuffer = window.framebuffers[imageIndex];
+				renderPassInfo.renderArea.offset = { 0, 0 };
+				renderPassInfo.renderArea.extent = window.extent;
+
+				VkClearValue clearColor = { {{0.5f, 0.0f, 1.0f, 1.0f}} };
+				renderPassInfo.clearValueCount = 1;
+				renderPassInfo.pClearValues = &clearColor;
+
+				vkCmdBeginRenderPass(engine_.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+				VkViewport viewport{};
+				viewport.x = 0.0f;
+				viewport.y = 0.0f;
+				viewport.width = width;
+				viewport.height = height;
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
+
+				VkRect2D scissor{};
+				scissor.offset = { 0, 0 };
+				scissor.extent = { (unsigned int)width, (unsigned int)height };
+
+				vkCmdSetViewport(engine_.commandBuffer, 0, 1, &viewport);
+				vkCmdSetScissor(engine_.commandBuffer, 0, 1, &scissor);
+
+				vkCmdBindPipeline(engine_.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
+
+				VkDeviceSize offsets = 0;
+				vkCmdBindVertexBuffers(engine_.commandBuffer, 0, 1, &engine_.vertexBuffer, &offsets);
+				vkCmdBindIndexBuffer(engine_.commandBuffer, engine_.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+				vkCmdBindDescriptorSets(engine_.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout, 0, 1, &engine_.descriptorSets[currentFrame_], 0, nullptr);
+				vkCmdDrawIndexed(engine_.commandBuffer, static_cast<uint32_t>(indices.size()), Entity::components_[Entity::getComponentTypeID<Transform>()].size(), 0, 0, 0);
+
+				vkCmdEndRenderPass(engine_.commandBuffer);
+
+				if (vkEndCommandBuffer(engine_.commandBuffer) != VK_SUCCESS)
+				{
+					throw - 1;
+				}
+
+				// Soumet le command buffer
+
+				VkSubmitInfo submitInfo{};
+				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+				VkSemaphore waitSemaphores[] = { pipeline.imageAvailableSemaphore };
+				VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+				submitInfo.waitSemaphoreCount = 1;
+				submitInfo.pWaitSemaphores = waitSemaphores;
+				submitInfo.pWaitDstStageMask = waitStages;
+				submitInfo.commandBufferCount = 1;
+				submitInfo.pCommandBuffers = &engine_.commandBuffer;
+
+				VkSemaphore signalSemaphores[] = { pipeline.renderFinishedSemaphore };
+				submitInfo.signalSemaphoreCount = 1;
+				submitInfo.pSignalSemaphores = signalSemaphores;
+
+				if (vkQueueSubmit(logicalDevice_.graphicsQueue, 1, &submitInfo, pipeline.inFlightFence) != VK_SUCCESS)
+				{
+					throw - 1;
+				}
+
+				VkPresentInfoKHR presentInfo{};
+				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+				presentInfo.waitSemaphoreCount = 1;
+				presentInfo.pWaitSemaphores = signalSemaphores;
+
+				VkSwapchainKHR swapChains[] = { window.swapchain };
+				presentInfo.swapchainCount = 1;
+				presentInfo.pSwapchains = swapChains;
+				presentInfo.pImageIndices = &imageIndex;
+
+				vkQueuePresentKHR(logicalDevice_.presentQueue, &presentInfo);
+			}
 		}
 
 		currentFrame_ = (currentFrame_ + 1) % maxFramesInFlight_;
@@ -559,6 +752,8 @@ namespace blueberry
 			{
 				glfwSwapBuffers(window.window);
 			}
+
+			drawSprites();
 
             glfwPollEvents();
         }

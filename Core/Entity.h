@@ -4,11 +4,14 @@
 
 #include <vector>
 #include <iostream>
-
-#include "../Maths/Vector.h"
-#include "../Utils/TypeList.h"
+#include <typeindex>
 
 #include "../Graphics/Window.h"
+
+#include "../Maths/Vector.h"
+
+#include "../Utils/TypeList.h"
+#include "../Utils/Map.h"
 
 namespace blueberry
 {
@@ -29,6 +32,21 @@ namespace blueberry
 			position = { x, y, z };
 			rotation = { rx, ry, rz };
 			scale = { sx, sy, sz };
+		}
+
+		Vector3 getPosition()
+		{
+			return position;
+		}
+
+		Vector3 getRotation()
+		{
+			return rotation;
+		}
+
+		Vector3 getScale()
+		{
+			return scale;
 		}
 	};
 
@@ -56,16 +74,10 @@ namespace blueberry
 		static TypeList<uint32_t> freeIndices_;	// indices libres pour éviter un overflow
 		static TypeList<uint32_t> generations_;	// pour s'assurer qu'une entité n'a pas été détruite pour éviter une erreur silencieuse.
 
-		static TypeList<const char*> names_;	// noms 
-		static TypeList<uint32_t> hashedNames_;	// noms hashés
-		static TypeList<uint32_t> sortedNames_;	// indices des hashs des noms rangés. Pour avoir du O(log(n)) en recherche
+		static Map<std::type_index, uint32_t> types_;
 
 		static TypeList<TypeList<void*>> components_;
 
-		static bool findHashRange(uint32_t hash, uint32_t& first, uint32_t& last);
-		static uint32_t getHashIndex(const char* name);
-
-		static uint32_t getNextComponentTypeID();
 		template<typename T> static uint32_t getComponentTypeID();
 
 		uint32_t index_ = -1;
@@ -77,17 +89,13 @@ namespace blueberry
 
 	public:
 
-		static Entity getEntity(const char* name);
-
-		Entity(const char* name);
+		Entity();
 		Entity(const Entity& other);
 		Entity(Entity&& other) noexcept;
 		~Entity();
 
 		bool isDestroyed() const;
 		void destroy() const;
-
-		const char* getName() const;
 
 		template<typename T> T& setComponent(T component);
 		template<typename T, typename... Args> T& setComponent(Args&&... args);
@@ -97,16 +105,15 @@ namespace blueberry
 
 	};
 
-	inline uint32_t Entity::getNextComponentTypeID()
-	{
-		static uint32_t type = 0;
-		return type++;
-	}
-
 	template<typename T> uint32_t Entity::getComponentTypeID()
 	{
-		static uint32_t type = getNextComponentTypeID();
-		return type;
+		int index = types_.getKeys().getIndex(std::type_index(typeid(T))); // changer getIndex pour du log(n)
+
+		if (index != -1) return index;
+		
+		types_.add(std::type_index(typeid(T)), components_.size());
+		components_.add({});
+		return components_.size() - 1;
 	}
 
 	template<typename T> T& Entity::setComponent(T t)

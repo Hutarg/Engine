@@ -151,6 +151,7 @@
     <ClInclude Include="Maths\Functions.h" />
     <ClInclude Include="Maths\Vector.h" />
     <ClInclude Include="Utils\Functions.h" />
+    <ClInclude Include="Utils\Map.h" />
     <ClInclude Include="Utils\TypeList.h" />
   </ItemGroup>
   <ItemGroup>
