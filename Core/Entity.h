@@ -9,19 +9,20 @@
 #include "../Graphics/Window.h"
 
 #include "../Maths/Vector.h"
+#include "../Maths/Matrix.h"
 
 #include "../Utils/TypeList.h"
 #include "../Utils/Map.h"
 
 namespace blueberry
 {
-	class BLUEBERRY_API Transform
+	class BLUEBERRY_API alignas(16) Transform
 	{
 	private:
 
-		Vector3 position;
-		Vector3 rotation;
-		Vector3 scale;
+		Vector4 position;
+		Vector4 rotation;
+		Vector4 scale;
 
 	public:
 
@@ -29,24 +30,24 @@ namespace blueberry
 
 		Transform(float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz)
 		{
-			position = { x, y, z };
-			rotation = { rx, ry, rz };
-			scale = { sx, sy, sz };
+			position = { x, y, z, 1 };
+			rotation = { rx, ry, rz, 0 };
+			scale = { sx, sy, sz, 0 };
 		}
 
 		Vector3 getPosition()
 		{
-			return position;
+			return Vector3(position.getX(), position.getY(), position.getZ());
 		}
 
 		Vector3 getRotation()
 		{
-			return rotation;
+			return Vector3(rotation.getX(), rotation.getY(), rotation.getZ());
 		}
 
 		Vector3 getScale()
 		{
-			return scale;
+			return Vector3(scale.getX(), scale.getY(), scale.getZ());
 		}
 	};
 

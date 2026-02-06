@@ -7,7 +7,7 @@
 
 namespace blueberry
 {
-	template<uint32_t D> class Vector
+	template<uint32_t D> class alignas(16) Vector
 	{
 	private:
 
@@ -46,7 +46,7 @@ namespace blueberry
 				}
 			}
 
-			for (int j = k; j < D; j++) coords_[j++] = 0;
+			for (int j = k; j < D; j++) coords_[j] = 0;
 		}
 
 		~Vector()
@@ -102,14 +102,15 @@ namespace blueberry
 			}
 
 			return scalar;
-		}
+		} 
 	};
 
-	template<> class Vector<2>
+	template<> class alignas(16) Vector<2>
 	{
 	private:
 
 		float x, y;
+		
 
 	public:
 
@@ -150,7 +151,7 @@ namespace blueberry
 		}
 	};
 
-	template<> class Vector<3>
+	template<> class alignas(16) Vector<3>
 	{
 	private:
 
@@ -160,9 +161,9 @@ namespace blueberry
 
 		Vector()
 		{
-			this->x = 0;
-			this->y = 0;
-			this->z = 0;
+			x = 0;
+			y = 0;
+			z = 0;
 		}
 
 		Vector(float x, float y, float z)
@@ -197,7 +198,7 @@ namespace blueberry
 		}
 	};
 
-	template<> class Vector<4>
+	template<> class alignas(16) Vector<4>
 	{
 	private:
 

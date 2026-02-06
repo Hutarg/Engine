@@ -514,16 +514,6 @@ namespace blueberry
 
 		// Modification de la taille des buffers
 
-		if (stagingBufferSize > engine_.stagingBufferSize)
-		{
-			engine_.stagingBufferSize = stagingBufferSize;
-
-			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferSize);
-
-			vkBindBufferMemory(logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, 0);
-		}
-
 		if (vertexBufferSize > engine_.vertexBufferSize)
 		{
 			engine_.vertexBufferSize = vertexBufferSize;
@@ -570,6 +560,16 @@ namespace blueberry
 			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
 
+		if (stagingBufferSize > engine_.stagingBufferSize)
+		{
+			engine_.stagingBufferSize = stagingBufferSize;
+
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferSize);
+
+			vkBindBufferMemory(logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, 0);
+		}
+
 		// Ecriture des données dans les buffers
 
 		if (vertexBufferSize > 0)
@@ -596,11 +596,10 @@ namespace blueberry
 		{
 			void* data;
 			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, ssboBufferSize, 0, &data);
-			memcpy(data, Entity::components_[Entity::getComponentTypeID<Transform>()].data(), ssboBufferSize);
+			memcpy(data, Entity::components_[Entity::getComponentTypeID<Transform>()].data()[0], ssboBufferSize);
 			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
 
-			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool,
-				engine_.stagingBuffer, engine_.ssboBuffers[currentFrame_], ssboBufferSize);
+			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.ssboBuffers[currentFrame_], ssboBufferSize);
 		}
 
 		for (Pipeline::Pipeline_T pipeline : Pipeline::pipelines_)
@@ -648,8 +647,8 @@ namespace blueberry
 				VkViewport viewport{};
 				viewport.x = 0.0f;
 				viewport.y = 0.0f;
-				viewport.width = width;
-				viewport.height = height;
+				viewport.width = (float)width;
+				viewport.height = (float)height;
 				viewport.minDepth = 0.0f;
 				viewport.maxDepth = 1.0f;
 
@@ -731,6 +730,11 @@ namespace blueberry
 
     void Application::terminate()
     {
+		for (Window::Window_T window : Window::windows_)
+		{
+			glfwDestroyWindow(window.window);
+		}
+
 		if (physicalDevice_.device == VK_NULL_HANDLE)
 		{
 			destroyLogicalDevice();
