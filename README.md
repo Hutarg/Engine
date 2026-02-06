@@ -15,7 +15,7 @@ Le moteur est structuré sous la forme d'un [ECS](https://en.wikipedia.org/wiki/
  - [glm](https://www.opengl.org/sdk/libs/GLM/)
 
 ### TODO :
- - [ ] Dessiner les sprites dans la boucle principale
+ - [x] Dessiner les sprites dans la boucle principale
  - [ ] Ajout des textures
  - [ ] Mettre en place la physique pour les entités
  - [ ] Ajout de la sérialisation
