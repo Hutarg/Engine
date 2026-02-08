@@ -7,7 +7,14 @@ namespace blueberry
 
 	Map<std::type_index, uint32_t> Entity::types_ = {};
 
+	TypeList<uint32_t> Entity::scripts_ = {};
+
 	TypeList<TypeList<void*>> Entity::components_ = {};
+
+	Entity Script::getEntity()
+	{
+		return Entity(index_, generation_);
+	}
 
 	Entity::Entity(uint32_t index, uint32_t generation)
 	{

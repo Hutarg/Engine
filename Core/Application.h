@@ -37,6 +37,8 @@ namespace blueberry
 
 		static void drawSprites();
 
+		static void updateScripts(float dt);
+
 		friend class Window;
 		friend class Shader;
 		friend class Pipeline;

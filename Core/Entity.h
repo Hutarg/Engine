@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <typeindex>
+#include <type_traits>
 
 #include "../Graphics/Window.h"
 
@@ -16,6 +17,8 @@
 
 namespace blueberry
 {
+	class Entity;
+
 	class BLUEBERRY_API alignas(16) Transform
 	{
 	private:
@@ -30,9 +33,16 @@ namespace blueberry
 
 		Transform(float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz)
 		{
-			position = { x, y, z, 1 };
+			position = { x, y, z, 0 };
 			rotation = { rx, ry, rz, 0 };
 			scale = { sx, sy, sz, 0 };
+		}
+
+		Transform(Vector3 position, Vector3 rotation, Vector3 scale)
+		{
+			this->position = { position.getX(), position.getY(), position.getZ(), 0 };
+			this->rotation = { rotation.getX(), rotation.getY(), rotation.getZ(), 0 };
+			this->scale = { scale.getX(), scale.getY(), scale.getZ(), 0 };
 		}
 
 		Vector3 getPosition()
@@ -68,6 +78,26 @@ namespace blueberry
 
 	};
 
+	class BLUEBERRY_API Script
+	{
+	private:
+
+		uint32_t index_ = -1;
+		uint32_t generation_ = -1;
+
+		friend class Application;
+		friend class Entity;
+
+	protected:
+
+		virtual void create() {};
+		virtual void update(float dt) {};
+		virtual void destroy() {};
+
+		Entity getEntity();
+
+	};
+
 	class BLUEBERRY_API Entity
 	{
 	private:
@@ -76,7 +106,8 @@ namespace blueberry
 		static TypeList<uint32_t> generations_;	// pour s'assurer qu'une entité n'a pas été détruite pour éviter une erreur silencieuse.
 
 		static Map<std::type_index, uint32_t> types_;
-
+		static TypeList<uint32_t> scripts_;
+ 
 		static TypeList<TypeList<void*>> components_;
 
 		template<typename T> static uint32_t getComponentTypeID();
@@ -87,6 +118,7 @@ namespace blueberry
 		Entity(uint32_t index, uint32_t generation);
 
 		friend class Application;
+		friend class Script;
 
 	public:
 
@@ -114,6 +146,7 @@ namespace blueberry
 		
 		types_.add(std::type_index(typeid(T)), components_.size());
 		components_.add({});
+		if (std::is_base_of<Script, T>::value) scripts_.add(components_.size() - 1);
 		return components_.size() - 1;
 	}
 
@@ -128,6 +161,12 @@ namespace blueberry
 		T* component = new T(t);
 		pool[index_] = static_cast<void*>(component);
 
+		if (std::is_base_of<Script, T>::value)
+		{
+			((Script*)component)->index_ = index_;
+			((Script*)component)->generation_ = generation_;
+		}
+
 		return *component;
 	}
 
@@ -141,6 +180,12 @@ namespace blueberry
 
 		T* component = new T(std::forward<Args>(args)...);
 		pool[index_] = static_cast<void*>(component);
+
+		if (std::is_base_of<Script, T>::value)
+		{
+			((Script*)component)->index_ = index_;
+			((Script*)component)->generation_ = generation_;
+		}
 
 		return *component;
 	}

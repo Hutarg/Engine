@@ -3,6 +3,10 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <chrono>
+
+#include "../Core/Entity.h"
+
 #include "../Private/Structs.h"
 #include "../Private/Functions.h"
 
@@ -715,6 +719,19 @@ namespace blueberry
 		currentFrame_ = (currentFrame_ + 1) % maxFramesInFlight_;
 	}
 
+	void Application::updateScripts(float dt)
+	{
+		for (uint32_t scripts : Entity::scripts_)
+		{
+			for (void* script : Entity::components_[scripts])
+			{
+				if (script == nullptr) continue;
+
+				((Script*)script)->update(dt);
+			}
+		}
+	}
+
 	void Application::init()
 	{
 		init("", 1, 0, 0);
@@ -748,7 +765,8 @@ namespace blueberry
     {
         if (isRunning_) return;
 
-        isRunning_ = true;
+        isRunning_ = true; 
+		std::chrono::steady_clock::time_point lastTime = std::chrono::high_resolution_clock::now();
 
         while (isRunning_)
         {
@@ -758,6 +776,13 @@ namespace blueberry
 			}
 
 			drawSprites();
+
+			// Calcul du dt
+			std::chrono::steady_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
+			double dt = ((std::chrono::duration<double>)(currentTime - lastTime)).count();
+			lastTime = currentTime;
+
+			updateScripts(dt);
 
             glfwPollEvents();
         }
