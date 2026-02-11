@@ -498,6 +498,129 @@ namespace blueberry
 	{
 	}
 
+	void Application::updateWindows()
+	{
+		for (Window::Window_T& window : Window::windows_)
+		{
+			glfwSwapBuffers(window.window);
+
+			// modifie les composants vulkan de la fenêtre si sa taille a été modifiée
+
+			if (window.isResized)
+			{
+				vkDeviceWaitIdle(Application::logicalDevice_.device);
+
+				for (VkFramebuffer framebuffer : window.framebuffers) vkDestroyFramebuffer(Application::logicalDevice_.device, framebuffer, nullptr);
+				for (VkImageView imageView : window.imageViews) vkDestroyImageView(Application::logicalDevice_.device, imageView, nullptr);
+				// Les images sont détruites automatiquement avec la swapchain
+				vkDestroySwapchainKHR(Application::logicalDevice_.device, window.swapchain, nullptr);
+
+				if (window.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+				{
+					window.extent = window.capabilities.currentExtent;
+				}
+				else
+				{
+					int width, height;
+					glfwGetWindowSize(window.window, &width, &height);
+
+					window.extent = 
+					{
+						static_cast<uint32_t>(width),
+						static_cast<uint32_t>(height)
+					};
+
+					window.extent.width = clamp(window.extent.width, window.capabilities.minImageExtent.width, window.capabilities.maxImageExtent.width);
+					window.extent.height = clamp(window.extent.height, window.capabilities.minImageExtent.height, window.capabilities.maxImageExtent.height);
+				}
+
+				VkSwapchainCreateInfoKHR swapchainCreateInfo{};
+				swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+				swapchainCreateInfo.surface = window.surface;
+				swapchainCreateInfo.minImageCount = window.images.size();
+				swapchainCreateInfo.imageFormat = Window::windowInfos_.format.format;
+				swapchainCreateInfo.imageColorSpace = Window::windowInfos_.format.colorSpace;
+				swapchainCreateInfo.imageExtent = { (unsigned int)window.extent.width, (unsigned int)window.extent.height };
+				swapchainCreateInfo.imageArrayLayers = 1;
+				swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+				if (Application::logicalDevice_.graphicsQueue != Application::logicalDevice_.presentQueue)
+				{
+					uint32_t queueFamilyIndices[] = { Application::physicalDevice_.graphicsQueueIndex, Application::physicalDevice_.presentQueueIndex };
+
+					swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+					swapchainCreateInfo.queueFamilyIndexCount = 2;
+					swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
+				}
+
+				swapchainCreateInfo.preTransform = window.capabilities.currentTransform;
+				swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+				swapchainCreateInfo.presentMode = Window::windowInfos_.presentMode;
+				swapchainCreateInfo.clipped = VK_TRUE;
+				swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+
+				if (vkCreateSwapchainKHR(Application::logicalDevice_.device, &swapchainCreateInfo, nullptr, &window.swapchain) != VK_SUCCESS)
+				{
+					throw - 1;
+				}
+
+				// Récupère les images de la swapchain
+				uint32_t imageCount = 0;
+				vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window.swapchain, &imageCount, nullptr);
+
+				window.images = TypeList<VkImage>(imageCount);
+				vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window.swapchain, &imageCount, window.images.data());
+
+				window.imageViews = TypeList<VkImageView>(imageCount);
+
+				// Crée les images views
+				VkImageViewCreateInfo imageViewCreateInfo{};
+				imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+				imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+				imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+				imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+				imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+				imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+				imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+				imageViewCreateInfo.subresourceRange.levelCount = 1;
+				imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+				imageViewCreateInfo.subresourceRange.layerCount = 1;
+
+				for (int i = 0; i < window.images.size(); i++)
+				{
+					imageViewCreateInfo.image = window.images[i];
+					imageViewCreateInfo.format = Window::windowInfos_.format.format;
+
+					if (vkCreateImageView(Application::logicalDevice_.device, &imageViewCreateInfo, nullptr, &window.imageViews[i]) != VK_SUCCESS)
+					{
+						throw - 1;
+					}
+				}
+
+				window.framebuffers = TypeList<VkFramebuffer>(window.imageViews.size());
+				for (size_t i = 0; i < window.imageViews.size(); i++)
+				{
+					VkFramebufferCreateInfo framebufferInfo{};
+					framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+					framebufferInfo.renderPass = Window::windowInfos_.renderPass;
+					framebufferInfo.attachmentCount = 1;
+					framebufferInfo.pAttachments = &window.imageViews[i];
+					framebufferInfo.width = window.extent.width;
+					framebufferInfo.height = window.extent.height;
+					framebufferInfo.layers = 1;
+
+					if (vkCreateFramebuffer(Application::logicalDevice_.device, &framebufferInfo, nullptr, &window.framebuffers[i]) != VK_SUCCESS)
+					{
+						throw - 1;
+					}
+				}
+			}
+
+			window.isResized = false;
+		}
+	}
+
 	void Application::drawSprites()
 	{
 		//if (Entity::components_.size() <= Entity::getComponentTypeID<Transform>()) return;
@@ -610,11 +733,7 @@ namespace blueberry
 		{
 			for (Window::Window_T window : Window::windows_)
 			{
-				int width, height;
-				glfwGetFramebufferSize(window.window, &width, &height);
-
-				UBO ubo = { glm::lookAt(glm::vec3(0,0,1), glm::vec3(0,0,0), glm::vec3(0,1,0)),
-					glm::perspective(glm::radians(0.0f), (float)(width / height), 0.1f, 10.0f) };
+				UBO ubo = { glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0)), glm::perspective(glm::radians(60.0f), ((float)window.extent.width / (float)window.extent.height), 0.1f, 10.0f) };
 
 				memcpy(engine_.uniformBufferMaps[currentFrame_], &ubo, sizeof(ubo));
 
@@ -651,14 +770,14 @@ namespace blueberry
 				VkViewport viewport{};
 				viewport.x = 0.0f;
 				viewport.y = 0.0f;
-				viewport.width = (float)width;
-				viewport.height = (float)height;
+				viewport.width = (float)window.extent.width;
+				viewport.height = (float)window.extent.height;
 				viewport.minDepth = 0.0f;
 				viewport.maxDepth = 1.0f;
 
 				VkRect2D scissor{};
 				scissor.offset = { 0, 0 };
-				scissor.extent = { (unsigned int)width, (unsigned int)height };
+				scissor.extent = { (unsigned int)window.extent.width, (unsigned int)window.extent.height };
 
 				vkCmdSetViewport(engine_.commandBuffer, 0, 1, &viewport);
 				vkCmdSetScissor(engine_.commandBuffer, 0, 1, &scissor);
@@ -770,11 +889,7 @@ namespace blueberry
 
         while (isRunning_)
         {
-			for (Window::Window_T window : Window::windows_)
-			{
-				glfwSwapBuffers(window.window);
-			}
-
+			updateWindows();
 			drawSprites();
 
 			// Calcul du dt

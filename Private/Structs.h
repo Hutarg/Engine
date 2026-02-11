@@ -68,11 +68,14 @@ namespace blueberry
 		GLFWwindow* window;
 
 		VkSurfaceKHR surface;
+		VkSurfaceCapabilitiesKHR capabilities;
 		VkExtent2D extent;
 		VkSwapchainKHR swapchain;
 		TypeList<VkImage> images;
 		TypeList<VkImageView> imageViews;
 		TypeList<VkFramebuffer> framebuffers;
+
+		bool isResized = false;
 	};
 
 	struct Window::WindowInfos_T

@@ -27,6 +27,7 @@ namespace blueberry
 
 		friend class Application;
 		friend class Pipeline;
+		friend class Functions;
 
 	public:
 

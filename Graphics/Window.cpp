@@ -1,6 +1,7 @@
 #include "Window.h"
 
 #include "../Private/Structs.h"
+#include "../Private/Functions.h"
 
 #include "../Core/Application.h"
 
@@ -29,12 +30,14 @@ namespace blueberry
 			throw -1;
 		}
 
+		glfwSetWindowUserPointer(window_T.window, &window_T);
+		glfwSetWindowSizeCallback(window_T.window, Functions::windowSizeCallback);
+
 		if (glfwCreateWindowSurface(Application::instance_.instance, window_T.window, nullptr, &window_T.surface) != VK_SUCCESS)
 		{
 			throw - 1;
 		}
 
-		VkSurfaceCapabilitiesKHR capabilities;
 		TypeList<VkSurfaceFormatKHR> availableFormats;
 		TypeList<VkPresentModeKHR> availablePresentModes;
 
@@ -48,7 +51,7 @@ namespace blueberry
 
 			for (Application::PhysicalDevice_T physicalDevice : physicalDevices)
 			{
-				vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice.device, window_T.surface, &capabilities);
+				vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice.device, window_T.surface, &window_T.capabilities);
 
 				uint32_t formatCount;
 				vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice.device, window_T.surface, &formatCount, nullptr);
@@ -150,7 +153,7 @@ namespace blueberry
 		}
 		else
 		{
-			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Application::physicalDevice_.device, window_T.surface, &capabilities);
+			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Application::physicalDevice_.device, window_T.surface, &window_T.capabilities);
 
 			uint32_t formatCount;
 			vkGetPhysicalDeviceSurfaceFormatsKHR(Application::physicalDevice_.device, window_T.surface, &formatCount, nullptr);
@@ -172,28 +175,29 @@ namespace blueberry
 			throw - 1;
 		}
 
-		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+		if (window_T.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
 		{
-			window_T.extent = capabilities.currentExtent;
+			window_T.extent = window_T.capabilities.currentExtent;
 		}
-		else {
+		else 
+		{
 			int width, height;
-			glfwGetFramebufferSize(window_T.window, &width, &height);
+			glfwGetWindowSize(window_T.window, &width, &height);
 
 			window_T.extent = {
 				static_cast<uint32_t>(width),
 				static_cast<uint32_t>(height)
 			};
 
-			window_T.extent.width = clamp(window_T.extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-			window_T.extent.height = clamp(window_T.extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+			window_T.extent.width = clamp(window_T.extent.width, window_T.capabilities.minImageExtent.width, window_T.capabilities.maxImageExtent.width);
+			window_T.extent.height = clamp(window_T.extent.height, window_T.capabilities.minImageExtent.height, window_T.capabilities.maxImageExtent.height);
 		}
 
-		uint32_t imageCount = capabilities.minImageCount + 1;
+		uint32_t imageCount = window_T.capabilities.minImageCount + 1;
 
-		if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
+		if (window_T.capabilities.maxImageCount > 0 && imageCount > window_T.capabilities.maxImageCount)
 		{
-			imageCount = capabilities.maxImageCount;
+			imageCount = window_T.capabilities.maxImageCount;
 		}
 
 		// Crée la swapchain
@@ -216,7 +220,7 @@ namespace blueberry
 			swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
 		}
 
-		swapchainCreateInfo.preTransform = capabilities.currentTransform;
+		swapchainCreateInfo.preTransform = window_T.capabilities.currentTransform;
 		swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		swapchainCreateInfo.presentMode = windowInfos_.presentMode;
 		swapchainCreateInfo.clipped = VK_TRUE;
@@ -325,7 +329,7 @@ namespace blueberry
 		if (isClosed()) return 0;
 		
 		int width;
-		glfwGetFramebufferSize(windows_[index_].window, &width, nullptr);
+		glfwGetWindowSize(windows_[index_].window, &width, nullptr);
 		return width;
 	}
 
@@ -334,7 +338,7 @@ namespace blueberry
 		if (isClosed()) return 0;
 
 		int height;
-		glfwGetFramebufferSize(windows_[index_].window, nullptr, &height);
+		glfwGetWindowSize(windows_[index_].window, nullptr, &height);
 		return height;
 	}
 
@@ -343,7 +347,7 @@ namespace blueberry
 		if (isClosed()) return Vector2();
 
 		int width, height;
-		glfwGetFramebufferSize(windows_[index_].window, &width, &height);
+		glfwGetWindowSize(windows_[index_].window, &width, &height);
 		return Vector2(width, height);
 	}
 }

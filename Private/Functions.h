@@ -7,6 +7,17 @@
 
 namespace blueberry
 {
+	class Functions // permet d'éviter d'exposer les bibliothèques et d'avoir tout de même accès aux membres des classes du moteur
+	{
+	public:
+
+		static void windowSizeCallback(GLFWwindow* window, int width, int height)
+		{
+			((Window::Window_T*)glfwGetWindowUserPointer(window))->isResized = true;
+		}
+
+	};
+
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
