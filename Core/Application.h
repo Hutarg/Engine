@@ -42,6 +42,7 @@ namespace blueberry
 		friend class Window;
 		friend class Shader;
 		friend class Pipeline;
+		friend class Texture;
 
 	public:
 

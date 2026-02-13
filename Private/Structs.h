@@ -4,6 +4,7 @@
 
 #include "../Graphics/Window.h"
 #include "../Graphics/Shader.h"
+#include "../Graphics/Texture.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -99,6 +100,12 @@ namespace blueberry
 		VkShaderModule shader;
 		VkShaderStageFlagBits stage;
 		const char* stageName;
+	};
+
+	struct Texture::Texture_T
+	{
+		VkImage image;
+		VkDeviceMemory imageMemory;
 	};
 
 	struct alignas(16) Vertex

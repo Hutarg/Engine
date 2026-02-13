@@ -3,6 +3,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
+#include "Structs.h"
+
 #include <iostream>
 
 namespace blueberry
