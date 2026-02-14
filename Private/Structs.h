@@ -12,6 +12,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define BLUEBERRY_MAJOR_VERSION 1
+#define BLUEBERRY_MINOR_VERSION 0
+#define BLUEBERRY_PATCH_VERSION 0
+
+#define BLUEBERRY_MAX_FRAMES_IN_FLIGHT 3
+#define BLUEBERRY_MAX_TEXTURE_COUNT 100000
+
 namespace blueberry
 {
 	struct Application::Instance_T
@@ -25,6 +32,9 @@ namespace blueberry
 		VkPhysicalDevice device;
 		uint32_t presentQueueIndex;
 		uint32_t graphicsQueueIndex;
+
+		uint32_t maxAnisotropy;
+		bool bindlessSupported;
 	};
 
 	struct Application::LogicalDevice_T
@@ -37,7 +47,15 @@ namespace blueberry
 	struct Application::Engine_T
 	{
 		VkCommandPool commandPool;
-		VkCommandBuffer commandBuffer;
+		TypeList<VkCommandBuffer> commandBuffers;
+
+		VkDescriptorSetLayout descriptorSetLayout;
+		VkDescriptorPool descriptorPool;
+		TypeList<VkDescriptorSet> descriptorSets;
+
+		VkDescriptorSetLayout bindlessDescriptorSetLayout;
+		VkDescriptorPool bindlessDescriptorPool;
+		VkDescriptorSet bindlessDescriptorSet;
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
@@ -59,9 +77,7 @@ namespace blueberry
 		TypeList<VkDeviceMemory> uniformBufferMemories;
 		TypeList<void*> uniformBufferMaps;
 
-		VkDescriptorSetLayout descriptorSetLayout;
-		VkDescriptorPool descriptorPool;
-		TypeList<VkDescriptorSet> descriptorSets;
+		TypeList<VkFence> inFlightFences;
 	};
 
 	struct Window::Window_T
@@ -75,6 +91,9 @@ namespace blueberry
 		TypeList<VkImage> images;
 		TypeList<VkImageView> imageViews;
 		TypeList<VkFramebuffer> framebuffers;
+
+		TypeList<VkSemaphore> imageAvailableSemaphores;
+		TypeList<VkSemaphore> renderFinishedSemaphores;
 
 		bool isResized = false;
 	};
@@ -90,9 +109,6 @@ namespace blueberry
 	{
 		VkPipelineLayout pipelineLayout;
 		VkPipeline pipeline;
-		VkSemaphore imageAvailableSemaphore;
-		VkSemaphore renderFinishedSemaphore;
-		VkFence inFlightFence;
 	};
 
 	struct Shader::Shader_T
@@ -106,6 +122,10 @@ namespace blueberry
 	{
 		VkImage image;
 		VkDeviceMemory imageMemory;
+		VkImageView imageView;
+		VkSampler sampler;
+
+		bool update;
 	};
 
 	struct alignas(16) Vertex

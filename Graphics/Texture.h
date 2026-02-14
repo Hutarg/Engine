@@ -5,6 +5,8 @@
 
 namespace blueberry
 {
+	class File;
+
 	class BLUEBERRY_API Texture
 	{
 	private:
@@ -17,6 +19,8 @@ namespace blueberry
 
 		uint32_t index_ = -1;
 		uint32_t generation_ = -1;
+
+		friend class Application;
 
 	public:
 

@@ -12,10 +12,6 @@
 
 #include "../Graphics/Window.h"
 
-#define BLUEBERRY_MAJOR_VERSION 1
-#define BLUEBERRY_MINOR_VERSION 0
-#define BLUEBERRY_PATCH_VERSION 0
-
 #ifndef BLUEBERRY_ENABLE_VALIDATION_LAYERS
 #ifdef NDEBUG 
 #define BLUEBERRY_ENABLE_VALIDATION_LAYERS false
@@ -24,11 +20,13 @@
 #endif
 #endif
 
-const blueberry::TypeList<const char*> validationLayers = {
+const blueberry::TypeList<const char*> validationLayers = 
+{
 	"VK_LAYER_KHRONOS_validation"
 };
 
-const blueberry::TypeList<const char*> deviceExtensions = {
+const blueberry::TypeList<const char*> deviceExtensions = 
+{
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -40,7 +38,6 @@ namespace blueberry
 	Application::Engine_T Application::engine_ = {};
 
 	bool Application::isRunning_ = false;
-	uint32_t Application::maxFramesInFlight_ = 3;
 	uint32_t Application::currentFrame_ = 0;
 
 	// Crée l'instance et le debug messenger
@@ -176,6 +173,16 @@ namespace blueberry
 			VkPhysicalDeviceFeatures deviceFeatures;
 			vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 
+			VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+			indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+			indexingFeatures.pNext = nullptr;
+
+			VkPhysicalDeviceFeatures2 deviceFeatures2{};
+			deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+			deviceFeatures2.pNext = &indexingFeatures;
+
+			vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
+
 			if (!deviceFeatures.multiViewport) suitable = false;
 			if (!deviceFeatures.geometryShader) suitable = false;
 
@@ -245,11 +252,22 @@ namespace blueberry
 
 			if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score += 1000;
 
-			// Range le gpu (il y a des meilleurs moyens mais c pas grave, il y a pas 10 000 gpu sur un ordi)
+			bool bindlessSupported =	indexingFeatures.shaderSampledImageArrayNonUniformIndexing && 
+										indexingFeatures.descriptorBindingSampledImageUpdateAfterBind &&
+										indexingFeatures.shaderUniformBufferArrayNonUniformIndexing &&
+										indexingFeatures.descriptorBindingUniformBufferUpdateAfterBind &&
+										indexingFeatures.shaderStorageBufferArrayNonUniformIndexing &&
+										indexingFeatures.descriptorBindingStorageBufferUpdateAfterBind;
+
+			if (bindlessSupported) score += 1000;
+
+			// Range le gpu (il y a des meilleurs moyens mais c très pas grave, il y a pas 10 000 gpu sur un ordi)
 			PhysicalDevice_T physicalDevice_T = {};
 			physicalDevice_T.device = physicalDevice;
 			physicalDevice_T.presentQueueIndex = presentQueueIndex;
 			physicalDevice_T.graphicsQueueIndex = graphicsQueueIndex;
+			physicalDevice_T.bindlessSupported = bindlessSupported;
+			physicalDevice_T.maxAnisotropy = deviceProperties.limits.maxSamplerAnisotropy;
 
 			bool sorted = false;
 
@@ -319,6 +337,25 @@ namespace blueberry
 			deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 		}
 
+		if (physicalDevice_.bindlessSupported)
+		{
+			VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+			indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+			indexingFeatures.pNext = nullptr;
+
+			VkPhysicalDeviceFeatures2 deviceFeatures2{};
+			deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+			deviceFeatures2.pNext = &indexingFeatures;
+
+			vkGetPhysicalDeviceFeatures2(physicalDevice_.device, &deviceFeatures2);
+
+			deviceFeatures2.features.geometryShader = VK_TRUE;
+			deviceFeatures2.features.multiViewport = VK_TRUE;
+			
+			deviceCreateInfo.pEnabledFeatures = nullptr;
+			deviceCreateInfo.pNext = &deviceFeatures2;
+		}
+
 		if (vkCreateDevice(physicalDevice_.device, &deviceCreateInfo, nullptr, &logicalDevice_.device) != VK_SUCCESS)
 		{
 			throw - 1;
@@ -340,17 +377,6 @@ namespace blueberry
 		commandPoolInfo.queueFamilyIndex = physicalDevice_.graphicsQueueIndex;
 
 		if (vkCreateCommandPool(logicalDevice_.device, &commandPoolInfo, nullptr, &engine_.commandPool) != VK_SUCCESS)
-		{
-			throw - 1;
-		}
-
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandPool = engine_.commandPool;
-		allocInfo.commandBufferCount = 1;
-
-		if (vkAllocateCommandBuffers(logicalDevice_.device, &allocInfo, &engine_.commandBuffer) != VK_SUCCESS)
 		{
 			throw - 1;
 		}
@@ -379,13 +405,48 @@ namespace blueberry
 			throw - 1;
 		}
 
+		VkDescriptorSetLayoutBinding textureLayoutBinding{};
+
+		if (physicalDevice_.bindlessSupported)
+		{
+			textureLayoutBinding.binding = 2;
+			textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			textureLayoutBinding.descriptorCount = BLUEBERRY_MAX_TEXTURE_COUNT;
+			textureLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+		}
+		else
+		{
+			// faire le cas contraire
+		}
+
+		VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT |
+			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT |
+			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT;
+
+		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT flagsInfo = {};
+		flagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
+		flagsInfo.pBindingFlags = &bindingFlags;
+		flagsInfo.bindingCount = 1;
+
+		VkDescriptorSetLayoutCreateInfo bindlessLayoutInfo = {};
+		bindlessLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		bindlessLayoutInfo.bindingCount = 1;
+		bindlessLayoutInfo.pBindings = &textureLayoutBinding;
+		bindlessLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
+		bindlessLayoutInfo.pNext = &flagsInfo;
+
+		if (vkCreateDescriptorSetLayout(logicalDevice_.device, &bindlessLayoutInfo, nullptr, &engine_.bindlessDescriptorSetLayout) != VK_SUCCESS)
+		{
+			throw - 1;
+		}
+
 		VkDescriptorPoolSize uboPoolSize{};
 		uboPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		uboPoolSize.descriptorCount = static_cast<uint32_t>(maxFramesInFlight_);
+		uboPoolSize.descriptorCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
 		VkDescriptorPoolSize ssboPoolSize{};
 		ssboPoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		ssboPoolSize.descriptorCount = static_cast<uint32_t>(maxFramesInFlight_);
+		ssboPoolSize.descriptorCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
 		TypeList<VkDescriptorPoolSize> poolSizes = { uboPoolSize, ssboPoolSize };
 
@@ -393,27 +454,62 @@ namespace blueberry
 		descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		descriptorPoolInfo.poolSizeCount = poolSizes.size();
 		descriptorPoolInfo.pPoolSizes = poolSizes.data();
-		descriptorPoolInfo.maxSets = static_cast<uint32_t>(maxFramesInFlight_);
+		descriptorPoolInfo.maxSets = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
 		if (vkCreateDescriptorPool(logicalDevice_.device, &descriptorPoolInfo, nullptr, &engine_.descriptorPool) != VK_SUCCESS)
 		{
 			throw - 1;
 		}
 
-		engine_.descriptorSets = TypeList<VkDescriptorSet>(maxFramesInFlight_);
+		VkDescriptorPoolSize texturePoolSize{};
+		texturePoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		texturePoolSize.descriptorCount = BLUEBERRY_MAX_TEXTURE_COUNT;
 
-		for (int i = 0; i < maxFramesInFlight_; i++)
+		VkDescriptorPoolCreateInfo bindlessDescriptorPoolInfo{};
+		bindlessDescriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		bindlessDescriptorPoolInfo.poolSizeCount = 1;
+		bindlessDescriptorPoolInfo.pPoolSizes = &texturePoolSize;
+		bindlessDescriptorPoolInfo.maxSets = 1;
+		bindlessDescriptorPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+
+		if (vkCreateDescriptorPool(logicalDevice_.device, &bindlessDescriptorPoolInfo, nullptr, &engine_.bindlessDescriptorPool) != VK_SUCCESS)
 		{
-			VkDescriptorSetAllocateInfo allocInfo{};
-			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			allocInfo.descriptorPool = engine_.descriptorPool;
-			allocInfo.descriptorSetCount = 1;
-			allocInfo.pSetLayouts = &engine_.descriptorSetLayout;
+			throw - 1;
+		}
 
-			if (vkAllocateDescriptorSets(logicalDevice_.device, &allocInfo, &engine_.descriptorSets[i]) != VK_SUCCESS)
-			{
-				throw - 1;
-			}
+		TypeList<VkDescriptorSetLayout> descriptorSetLayouts = { engine_.descriptorSetLayout, BLUEBERRY_MAX_FRAMES_IN_FLIGHT };
+
+		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
+		descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		descriptorSetAllocateInfo.descriptorPool = engine_.descriptorPool;
+		descriptorSetAllocateInfo.descriptorSetCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
+
+		engine_.descriptorSets = TypeList<VkDescriptorSet>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		if (vkAllocateDescriptorSets(logicalDevice_.device, &descriptorSetAllocateInfo, engine_.descriptorSets.data()) != VK_SUCCESS)
+		{
+			throw - 1;
+		}
+
+		TypeList<VkDescriptorSetLayout> bindlessDescriptorSetLayouts = { engine_.bindlessDescriptorSetLayout, BLUEBERRY_MAX_FRAMES_IN_FLIGHT };
+
+		uint32_t counts = 100000;
+
+		VkDescriptorSetVariableDescriptorCountAllocateInfo countInfo{};
+		countInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO;
+		countInfo.descriptorSetCount = 1;
+		countInfo.pDescriptorCounts = &counts;
+
+		VkDescriptorSetAllocateInfo bindlessDescriptorSetAllocateInfo{};
+		bindlessDescriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		bindlessDescriptorSetAllocateInfo.descriptorPool = engine_.bindlessDescriptorPool;
+		bindlessDescriptorSetAllocateInfo.descriptorSetCount = 1;
+		bindlessDescriptorSetAllocateInfo.pSetLayouts = bindlessDescriptorSetLayouts.data();
+		bindlessDescriptorSetAllocateInfo.pNext = &countInfo;
+
+		if (vkAllocateDescriptorSets(logicalDevice_.device, &bindlessDescriptorSetAllocateInfo, &engine_.bindlessDescriptorSet) != VK_SUCCESS)
+		{
+			throw - 1;
 		}
 
 		engine_.stagingBuffer = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
@@ -434,11 +530,11 @@ namespace blueberry
 
 		vkBindBufferMemory(logicalDevice_.device, engine_.indexBuffer, engine_.indexBufferMemory, 0);
 
-		engine_.uniformBuffers = TypeList<VkBuffer>(maxFramesInFlight_);
-		engine_.uniformBufferMemories = TypeList<VkDeviceMemory>(maxFramesInFlight_);
-		engine_.uniformBufferMaps = TypeList<void*>(maxFramesInFlight_);
+		engine_.uniformBuffers = TypeList<VkBuffer>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.uniformBufferMemories = TypeList<VkDeviceMemory>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.uniformBufferMaps = TypeList<void*>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
-		for (int i = 0; i < maxFramesInFlight_; i++)
+		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
 		{
 			engine_.uniformBuffers[i] = createBuffer(logicalDevice_.device, sizeof(UBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 			engine_.uniformBufferMemories[i] = createDeviceMemory(physicalDevice_.device, logicalDevice_.device, engine_.uniformBuffers[i], VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -463,11 +559,11 @@ namespace blueberry
 			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
 
-		engine_.ssboBufferSizes = TypeList<size_t>(maxFramesInFlight_);
-		engine_.ssboBuffers = TypeList<VkBuffer>(maxFramesInFlight_);
-		engine_.ssboBufferMemories = TypeList<VkDeviceMemory>(maxFramesInFlight_);
+		engine_.ssboBufferSizes = TypeList<size_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.ssboBuffers = TypeList<VkBuffer>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.ssboBufferMemories = TypeList<VkDeviceMemory>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
-		for (int i = 0; i < maxFramesInFlight_; i++)
+		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
 		{
 			engine_.ssboBufferSizes[i] = 1;
 			engine_.ssboBuffers[i] = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
@@ -492,6 +588,23 @@ namespace blueberry
 
 			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
+
+		engine_.inFlightFences = TypeList<VkFence>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+
+		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			VkSemaphoreCreateInfo semaphoreInfo{};
+			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+			VkFenceCreateInfo fenceInfo{};
+			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+			if (vkCreateFence(Application::logicalDevice_.device, &fenceInfo, nullptr, &engine_.inFlightFences[i]) != VK_SUCCESS)
+			{
+				throw - 1;
+			}
+		}
 	}
 
 	void Application::destroyEngine()
@@ -512,7 +625,7 @@ namespace blueberry
 
 				for (VkFramebuffer framebuffer : window.framebuffers) vkDestroyFramebuffer(Application::logicalDevice_.device, framebuffer, nullptr);
 				for (VkImageView imageView : window.imageViews) vkDestroyImageView(Application::logicalDevice_.device, imageView, nullptr);
-				// Les images sont détruites automatiquement avec la swapchain
+				// Les images sont détruites automatiquement avec la swapchain donc pas de for image
 				vkDestroySwapchainKHR(Application::logicalDevice_.device, window.swapchain, nullptr);
 
 				if (window.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
@@ -623,7 +736,30 @@ namespace blueberry
 
 	void Application::drawSprites()
 	{
-		//if (Entity::components_.size() <= Entity::getComponentTypeID<Transform>()) return;
+		vkWaitForFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_], VK_TRUE, UINT64_MAX);
+		vkResetFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_]);
+
+		// Update les textures
+		for (int i = 0; i < Texture::textures_.size(); i++)
+		{
+			if (!Texture::textures_[i].update) continue;
+
+			VkDescriptorImageInfo imageInfo{};
+			imageInfo.sampler = Texture::textures_[i].sampler;
+			imageInfo.imageView = Texture::textures_[i].imageView;
+			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+			VkWriteDescriptorSet write = {};
+			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			write.dstSet = engine_.bindlessDescriptorSet;
+			write.dstBinding = 2;
+			write.dstArrayElement = i;
+			write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			write.descriptorCount = 1;
+			write.pImageInfo = &imageInfo;
+
+			vkUpdateDescriptorSets(Application::logicalDevice_.device, 1, &write, 0, nullptr);
+		}
 
 		TypeList<Vertex> vertices = {
 				{ {-0.5f, -0.5f, 0.0f}, {1, 1, 0}, {0, 0, 0} },
@@ -728,28 +864,62 @@ namespace blueberry
 
 			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.ssboBuffers[currentFrame_], ssboBufferSize);
 		}
-
-		for (Pipeline::Pipeline_T pipeline : Pipeline::pipelines_)
+		
+		if (engine_.commandBuffers.size() < Window::windows_.size() * Pipeline::pipelines_.size())
 		{
-			for (Window::Window_T window : Window::windows_)
+			int commandBufferSize = engine_.commandBuffers.size();
+			engine_.commandBuffers.resize(Window::windows_.size() * Pipeline::pipelines_.size());
+
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandPool = Application::engine_.commandPool;
+			allocInfo.commandBufferCount = Window::windows_.size() * Pipeline::pipelines_.size() - commandBufferSize;
+
+			if (vkAllocateCommandBuffers(Application::logicalDevice_.device, &allocInfo, &engine_.commandBuffers[commandBufferSize]) != VK_SUCCESS)
 			{
+				throw - 1;
+			}
+		}
+
+		TypeList<uint32_t> imageIndices = TypeList<uint32_t>(Window::windows_.size());
+		TypeList<VkSwapchainKHR> swapchains = TypeList<VkSwapchainKHR>(Window::windows_.size());
+		TypeList<VkPipelineStageFlags> waitStages = TypeList<VkPipelineStageFlags>(Window::windows_.size());
+
+		TypeList<VkSemaphore> imageAvailableSemaphores = TypeList<VkSemaphore>(Window::windows_.size());
+		TypeList<VkSemaphore> renderFinishedSemaphores = TypeList<VkSemaphore>(Window::windows_.size());
+
+		for (int i = 0; i < Window::windows_.size(); i++)
+		{
+			Window::Window_T window = Window::windows_[i];
+
+			uint32_t imageIndex;
+			vkAcquireNextImageKHR(logicalDevice_.device, window.swapchain, UINT64_MAX, window.imageAvailableSemaphores[currentFrame_], VK_NULL_HANDLE, &imageIndex);
+
+			imageIndices[i] = imageIndex;
+			swapchains[i] = window.swapchain;
+			waitStages[i] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; 
+			
+			imageAvailableSemaphores[i] = window.imageAvailableSemaphores[currentFrame_];
+			renderFinishedSemaphores[i] = window.renderFinishedSemaphores[currentFrame_];
+
+			for (int j = 0; j < Pipeline::pipelines_.size(); j++)
+			{
+				Pipeline::Pipeline_T pipeline = Pipeline::pipelines_[j];
+				VkCommandBuffer commandBuffer = engine_.commandBuffers[i * Pipeline::pipelines_.size() + j];
+
 				UBO ubo = { glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0)), glm::perspective(glm::radians(60.0f), ((float)window.extent.width / (float)window.extent.height), 0.1f, 10.0f) };
 
 				memcpy(engine_.uniformBufferMaps[currentFrame_], &ubo, sizeof(ubo));
 
-				vkWaitForFences(logicalDevice_.device, 1, &pipeline.inFlightFence, VK_TRUE, UINT64_MAX);
-				vkResetFences(logicalDevice_.device, 1, &pipeline.inFlightFence);
+				// Reset et enregistre le command buffer pour le rendu des entités
 
-				uint32_t imageIndex;
-				vkAcquireNextImageKHR(logicalDevice_.device, window.swapchain, UINT64_MAX, pipeline.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
-				vkResetCommandBuffer(engine_.commandBuffer, 0);
-
-				// Enregistre le command buffer pour le rendu des entités
+				vkResetCommandBuffer(commandBuffer, 0);
 
 				VkCommandBufferBeginInfo beginInfo{};
 				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-				if (vkBeginCommandBuffer(engine_.commandBuffer, &beginInfo) != VK_SUCCESS)
+				if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
 				{
 					throw - 1;
 				}
@@ -765,7 +935,7 @@ namespace blueberry
 				renderPassInfo.clearValueCount = 1;
 				renderPassInfo.pClearValues = &clearColor;
 
-				vkCmdBeginRenderPass(engine_.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+				vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 				VkViewport viewport{};
 				viewport.x = 0.0f;
@@ -779,63 +949,58 @@ namespace blueberry
 				scissor.offset = { 0, 0 };
 				scissor.extent = { (unsigned int)window.extent.width, (unsigned int)window.extent.height };
 
-				vkCmdSetViewport(engine_.commandBuffer, 0, 1, &viewport);
-				vkCmdSetScissor(engine_.commandBuffer, 0, 1, &scissor);
+				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-				vkCmdBindPipeline(engine_.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipeline);
+				vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipeline);
 
 				VkDeviceSize offsets = 0;
-				vkCmdBindVertexBuffers(engine_.commandBuffer, 0, 1, &engine_.vertexBuffer, &offsets);
-				vkCmdBindIndexBuffer(engine_.commandBuffer, engine_.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &engine_.vertexBuffer, &offsets);
+				vkCmdBindIndexBuffer(commandBuffer, engine_.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-				vkCmdBindDescriptorSets(engine_.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.pipelineLayout, 0, 1, &engine_.descriptorSets[currentFrame_], 0, nullptr);
-				vkCmdDrawIndexed(engine_.commandBuffer, static_cast<uint32_t>(indices.size()), Entity::components_[Entity::getComponentTypeID<Transform>()].size(), 0, 0, 0);
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipelineLayout, 0, 1, &engine_.descriptorSets[currentFrame_], 0, nullptr);
+				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), Entity::components_[Entity::getComponentTypeID<Transform>()].size(), 0, 0, 0);
 
-				vkCmdEndRenderPass(engine_.commandBuffer);
+				vkCmdEndRenderPass(commandBuffer);
 
-				if (vkEndCommandBuffer(engine_.commandBuffer) != VK_SUCCESS)
+				if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 				{
 					throw - 1;
 				}
-
-				// Soumet le command buffer
-
-				VkSubmitInfo submitInfo{};
-				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-				VkSemaphore waitSemaphores[] = { pipeline.imageAvailableSemaphore };
-				VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-				submitInfo.waitSemaphoreCount = 1;
-				submitInfo.pWaitSemaphores = waitSemaphores;
-				submitInfo.pWaitDstStageMask = waitStages;
-				submitInfo.commandBufferCount = 1;
-				submitInfo.pCommandBuffers = &engine_.commandBuffer;
-
-				VkSemaphore signalSemaphores[] = { pipeline.renderFinishedSemaphore };
-				submitInfo.signalSemaphoreCount = 1;
-				submitInfo.pSignalSemaphores = signalSemaphores;
-
-				if (vkQueueSubmit(logicalDevice_.graphicsQueue, 1, &submitInfo, pipeline.inFlightFence) != VK_SUCCESS)
-				{
-					throw - 1;
-				}
-
-				VkPresentInfoKHR presentInfo{};
-				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-				presentInfo.waitSemaphoreCount = 1;
-				presentInfo.pWaitSemaphores = signalSemaphores;
-
-				VkSwapchainKHR swapChains[] = { window.swapchain };
-				presentInfo.swapchainCount = 1;
-				presentInfo.pSwapchains = swapChains;
-				presentInfo.pImageIndices = &imageIndex;
-
-				vkQueuePresentKHR(logicalDevice_.presentQueue, &presentInfo);
 			}
 		}
 
-		currentFrame_ = (currentFrame_ + 1) % maxFramesInFlight_;
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+		submitInfo.waitSemaphoreCount = imageAvailableSemaphores.size();
+		submitInfo.pWaitSemaphores = imageAvailableSemaphores.data();
+		submitInfo.pWaitDstStageMask = waitStages.data();
+
+		submitInfo.commandBufferCount = engine_.commandBuffers.size();
+		submitInfo.pCommandBuffers = engine_.commandBuffers.data();
+
+		submitInfo.signalSemaphoreCount = renderFinishedSemaphores.size();
+		submitInfo.pSignalSemaphores = renderFinishedSemaphores.data();
+
+		if (vkQueueSubmit(logicalDevice_.graphicsQueue, 1, &submitInfo, engine_.inFlightFences[currentFrame_]) != VK_SUCCESS)
+		{
+			throw - 1;
+		}
+
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+		presentInfo.waitSemaphoreCount = renderFinishedSemaphores.size();
+		presentInfo.pWaitSemaphores = renderFinishedSemaphores.data();
+
+		presentInfo.swapchainCount = swapchains.size();
+		presentInfo.pSwapchains = swapchains.data();
+		presentInfo.pImageIndices = imageIndices.data();
+
+		vkQueuePresentKHR(logicalDevice_.presentQueue, &presentInfo);
+
+		currentFrame_ = (currentFrame_ + 1) % BLUEBERRY_MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void Application::updateScripts(float dt)
@@ -896,6 +1061,8 @@ namespace blueberry
 			std::chrono::steady_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
 			double dt = ((std::chrono::duration<double>)(currentTime - lastTime)).count();
 			lastTime = currentTime;
+
+			std::cout << 1 / dt << "\n";
 
 			updateScripts(dt);
 

@@ -260,6 +260,9 @@ namespace blueberry
 			pdata_[i].~T();
 		}
 
+		capacity_ = size;
+		size_ = size;
+
 		::operator delete(pdata_);
 		pdata_ = pdata;
 	}
@@ -279,8 +282,8 @@ namespace blueberry
 			new (&pdata[i]) T(value);
 		}
 
+		capacity_ = size;
 		size_ = size;
-		capacity_ = (size > capacity_) ? size : capacity_;
 
 		if (pdata_ != nullptr) ::operator delete(pdata_);
 		pdata_ = pdata;

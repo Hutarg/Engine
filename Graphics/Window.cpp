@@ -282,6 +282,25 @@ namespace blueberry
 			}
 		}
 
+		window_T.imageAvailableSemaphores = TypeList<VkSemaphore>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		window_T.renderFinishedSemaphores = TypeList<VkSemaphore>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+
+		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			VkSemaphoreCreateInfo semaphoreInfo{};
+			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+			VkFenceCreateInfo fenceInfo{};
+			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+			if (vkCreateSemaphore(Application::logicalDevice_.device, &semaphoreInfo, nullptr, &window_T.imageAvailableSemaphores[i]) != VK_SUCCESS ||
+				vkCreateSemaphore(Application::logicalDevice_.device, &semaphoreInfo, nullptr, &window_T.renderFinishedSemaphores[i]) != VK_SUCCESS)
+			{
+				throw - 1;
+			}
+		}
+
 		if (freeIndices_.empty())
 		{
 			index_ = generations_.size();

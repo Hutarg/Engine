@@ -7,6 +7,9 @@
 
 namespace blueberry
 {
+	class String;
+	class Image;
+
 	class BLUEBERRY_API File
 	{
 	private:
@@ -15,7 +18,7 @@ namespace blueberry
 
 	public:
 
-		explicit File(const char* filename);
+		File(const char* filename);
 
 		String read();
 		void write(const char* text);

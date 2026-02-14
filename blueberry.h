@@ -11,8 +11,11 @@
 #include "Core/Application.h"
 #include "Core/Entity.h"
 
+#include "File/File.h"
+
 #include "Maths/Vector.h"
 
 #include "Graphics/Window.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Pipeline.h"
+#include "Graphics/Texture.h"

@@ -21,7 +21,6 @@ namespace blueberry
 		static Engine_T engine_;
 
 		static bool isRunning_;
-		static uint32_t maxFramesInFlight_; // Nombre max de frame en décalée entre le gpu et le cpu
 		static uint32_t currentFrame_;
 
 		static void createInstance(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion);

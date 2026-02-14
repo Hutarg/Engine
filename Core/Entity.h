@@ -65,12 +65,19 @@ namespace blueberry
 	{
 	private:
 
-		uint32_t windowIndex_; // Un sprite ne pourra être diplay que sur une fenêtre à la fois (au pire dupliquez le sprite)
+		// Un sprite ne pourra être dessiner que sur une fenêtre à la fois (au pire dupliquez le sprite)
+		uint32_t windowIndex_;
 		uint32_t windowGeneration_;
+
+		// Les données des sprites seront transmise directement au gpu et aux shaders pour éviter trop de calcul au niveau du cpu 
+		// je met ça pour que le shader sache si il faut afficher l'entité
 		uint32_t pipelineIndex_;
 		uint32_t pipelineGeneration_;
-		uint32_t textureIndex_; // 
-		uint32_t textureGeneration_;
+
+		// Une entité peut ne pas avoir de texture donc il faut que textureIndex puisse être négatif
+		// L'index peut représenter une texture mais aussi une animation. Ils seront normalement stockées de manière assez similaire.
+		int textureIndex_;
+		int textureGeneration_;
 
 	public:
 

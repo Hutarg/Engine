@@ -11,6 +11,10 @@ namespace blueberry
 
 	TypeList<TypeList<void*>> Entity::components_ = {};
 
+	Sprite::Sprite(Window window, Pipeline pipeline)
+	{
+	}
+
 	Entity Script::getEntity()
 	{
 		return Entity(index_, generation_);

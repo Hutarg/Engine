@@ -6,6 +6,9 @@ namespace blueberry
 {
 	Image::Image()
 	{
+		width_ = 0;
+		height_ = 0;
+		pixels_ = {};
 	}
 
 	Image::Image(const char* filename)
@@ -18,8 +21,8 @@ namespace blueberry
 
 	Image::Image(int width, int height, TypeList<unsigned char> pixels)
 	{
-		width_ = width_;
-		height_ = height_;
+		width_ = width;
+		height_ = height;
 
 		pixels_ = pixels;
 	}

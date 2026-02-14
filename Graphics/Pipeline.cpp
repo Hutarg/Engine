@@ -113,10 +113,12 @@ namespace blueberry
 		viewportState.scissorCount = 1;
 		viewportState.pScissors = &scissor;
 
+		TypeList<VkDescriptorSetLayout> descriptorSetLayouts = { Application::engine_.descriptorSetLayout, Application::engine_.bindlessDescriptorSetLayout };
+
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &Application::engine_.descriptorSetLayout;
+		pipelineLayoutInfo.setLayoutCount = descriptorSetLayouts.size();
+		pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
 		if (vkCreatePipelineLayout(Application::logicalDevice_.device, &pipelineLayoutInfo, nullptr, &pipeline_T.pipelineLayout) != VK_SUCCESS)
 		{
@@ -139,20 +141,6 @@ namespace blueberry
 		pipelineInfo.subpass = 0;
 
 		if (vkCreateGraphicsPipelines(Application::logicalDevice_.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline_T.pipeline) != VK_SUCCESS)
-		{
-			throw - 1;
-		}
-
-		VkSemaphoreCreateInfo semaphoreInfo{};
-		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-		VkFenceCreateInfo fenceInfo{};
-		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-		if (vkCreateSemaphore(Application::logicalDevice_.device, &semaphoreInfo, nullptr, &pipeline_T.imageAvailableSemaphore) != VK_SUCCESS ||
-			vkCreateSemaphore(Application::logicalDevice_.device, &semaphoreInfo, nullptr, &pipeline_T.renderFinishedSemaphore) != VK_SUCCESS ||
-			vkCreateFence(Application::logicalDevice_.device, &fenceInfo, nullptr, &pipeline_T.inFlightFence) != VK_SUCCESS)
 		{
 			throw - 1;
 		}
