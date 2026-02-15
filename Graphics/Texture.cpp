@@ -43,20 +43,6 @@ namespace blueberry
 			throw - 1;
 		}
 
-		// Agrandit si nécessaire le buffer de staging
-
-		int pixelsSize = image.getWidth() * image.getHeight() * 4;
-
-		if (pixelsSize > Application::engine_.stagingBufferSize)
-		{
-			Application::engine_.stagingBufferSize = pixelsSize;
-
-			recreateBuffer(Application::physicalDevice_.device, Application::logicalDevice_.device, Application::engine_.stagingBuffer, Application::engine_.stagingBufferMemory, 
-				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, Application::engine_.stagingBufferSize);
-
-			vkBindBufferMemory(Application::logicalDevice_.device, Application::engine_.stagingBuffer, Application::engine_.stagingBufferMemory, 0);
-		}
-
 		VkMemoryRequirements memRequirements;
 		vkGetImageMemoryRequirements(Application::logicalDevice_.device, texture_T.image, &memRequirements);
 
@@ -71,6 +57,25 @@ namespace blueberry
 		}
 
 		vkBindImageMemory(Application::logicalDevice_.device, texture_T.image, texture_T.imageMemory, 0);
+
+		// Agrandit si nécessaire le buffer de staging
+
+		int pixelsSize = image.getWidth() * image.getHeight() * 4;
+
+		if (pixelsSize > Application::engine_.stagingBufferSize)
+		{
+			Application::engine_.stagingBufferSize = pixelsSize;
+
+			recreateBuffer(Application::physicalDevice_.device, Application::logicalDevice_.device, Application::engine_.stagingBuffer, Application::engine_.stagingBufferMemory,
+				VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, Application::engine_.stagingBufferSize);
+
+			vkBindBufferMemory(Application::logicalDevice_.device, Application::engine_.stagingBuffer, Application::engine_.stagingBufferMemory, 0);
+		}
+
+		void* data;
+		vkMapMemory(Application::logicalDevice_.device, Application::engine_.stagingBufferMemory, 0, pixelsSize, 0, &data);
+		memcpy(data, image.getPixels().data(), pixelsSize);
+		vkUnmapMemory(Application::logicalDevice_.device, Application::engine_.stagingBufferMemory);
 
 		transitionImageLayout(Application::logicalDevice_.device, Application::logicalDevice_.graphicsQueue, Application::engine_.commandPool, texture_T.image, 
 			VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -125,7 +130,7 @@ namespace blueberry
 		{
 			throw -1;
 		}
-
+		
 		if (freeIndices_.empty())
 		{
 			index_ = generations_.size();

@@ -211,10 +211,9 @@ namespace blueberry
 		swapchainCreateInfo.imageArrayLayers = 1;
 		swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
+		uint32_t queueFamilyIndices[] = { Application::physicalDevice_.graphicsQueueIndex, Application::physicalDevice_.presentQueueIndex };
 		if (Application::logicalDevice_.graphicsQueue != Application::logicalDevice_.presentQueue)
 		{
-			uint32_t queueFamilyIndices[] = { Application::physicalDevice_.graphicsQueueIndex, Application::physicalDevice_.presentQueueIndex };
-
 			swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 			swapchainCreateInfo.queueFamilyIndexCount = 2;
 			swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;

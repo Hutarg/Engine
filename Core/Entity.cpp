@@ -6,10 +6,10 @@ namespace blueberry
 	TypeList<uint32_t> Entity::generations_ = {};
 
 	Map<std::type_index, uint32_t> Entity::types_ = {};
-
 	TypeList<uint32_t> Entity::scripts_ = {};
 
 	TypeList<TypeList<void*>> Entity::components_ = {};
+	TypeList<void(*)(void*)> Entity::componentDestructors_ = {};
 
 	Sprite::Sprite(Window window, Pipeline pipeline)
 	{
@@ -18,6 +18,18 @@ namespace blueberry
 	Entity Script::getEntity()
 	{
 		return Entity(index_, generation_);
+	}
+
+	void Entity::destroyComponents()
+	{
+		for (int i = 0; i < Entity::components_.size(); i++)
+		{
+			for (int j = 0; j < Entity::components_[i].size(); j++)
+			{
+				componentDestructors_[i](Entity::components_[i][j]);
+				Entity::components_[i][j] = nullptr;
+			}
+		}
 	}
 
 	Entity::Entity(uint32_t index, uint32_t generation)

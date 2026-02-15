@@ -86,8 +86,18 @@ namespace blueberry
 	template<typename T> inline TypeList<T>::TypeList(size_t size)
 	{
 		capacity_ = size;
-		size_ = size;
+		size_ = 0;
 		pdata_ = static_cast<T*>(::operator new(sizeof(T) * size));
+
+		if (std::is_default_constructible<T>::value)
+		{
+			for (size_t i = 0; i < size_; ++i)
+			{
+				new (&pdata_[i]) T();
+			}
+
+			size_ = size;
+		}
 	}
 
 	template<typename T> inline TypeList<T>::TypeList(std::initializer_list<T> list)
@@ -182,7 +192,9 @@ namespace blueberry
 		}
 		else
 		{
-			capacity_ = max(capacity_, (size_t)index) * 2 + 1;
+			capacity_++;
+			if(std::is_default_constructible<T>::value) capacity_ = max(capacity_, (size_t)index) * 2;
+
 			T* pdata = static_cast<T*>(::operator new(sizeof(T) * capacity_));
 
 			for (int i = 0; i < index; i++)
@@ -249,21 +261,30 @@ namespace blueberry
 	template<typename T> inline void TypeList<T>::resize(size_t size)
 	{
 		T* pdata = static_cast<T*>(::operator new(sizeof(T) * size));
+		size_t minSize = min(size, size_);
 
-		for (int i = 0; i < size && i < size_; i++)
+		for (size_t i = 0; i < minSize; i++)
 		{
 			new (&pdata[i]) T(pdata_[i]);
+		}
+
+		if (std::is_default_constructible<T>::value)
+		{
+			for (size_t i = minSize; i < size; ++i)
+			{
+				new (&pdata[i]) T();
+			}
 		}
 
 		for (size_t i = 0; i < size_; i++)
 		{
 			pdata_[i].~T();
 		}
+		::operator delete(pdata_);
 
 		capacity_ = size;
 		size_ = size;
 
-		::operator delete(pdata_);
 		pdata_ = pdata;
 	}
 
@@ -387,12 +408,12 @@ namespace blueberry
 
 		for (int i = 0; i < size_; i++)
 		{
-			newList.pdata_[i] = pdata_[i];
+			new (&newList.pdata_[i]) T(pdata_[i]);
 		}
 
 		for (int i = 0; i < other.size_; i++)
 		{
-			newList.pdata_[size_ + i] = other.pdata_[i];
+			new (&newList.pdata_[size_ + i]) T(other.pdata_[i]);
 		}
 
 		return newList;
@@ -405,12 +426,12 @@ namespace blueberry
 
 		for (int i = 0; i < size_; i++)
 		{
-			pdata[i] = pdata_[i];
+			new (&pdata[i]) T(pdata_[i]);
 		}
 
 		for (int i = 0; i < other.size_; i++)
 		{
-			pdata[size_ + i] = other.pdata_[i];
+			new (&pdata[size_ + i]) T(other.pdata_[i]);
 		}
 
 		::operator delete(pdata_);
@@ -421,18 +442,17 @@ namespace blueberry
 
 	template<typename T> inline TypeList<T>& TypeList<T>::operator=(const TypeList<T>& other)
 	{
-		if (this != &other)
+		if (this == &other) return *this;
+
+		clear();
+
+		capacity_ = other.capacity_;
+		size_ = other.size_;
+		pdata_ = static_cast<T*>(::operator new(sizeof(T) * capacity_));
+
+		for (int i = 0; i < size_; i++)
 		{
-			if (pdata_ != nullptr) ::operator delete(pdata_);;
-
-			size_ = other.size_;
-			capacity_ = other.capacity_;
-			pdata_ = static_cast<T*>(::operator new(sizeof(T) * capacity_));
-
-			for (int i = 0; i < size_; i++)
-			{
-				pdata_[i] = other.pdata_[i];
-			}
+			new (&pdata_[i]) T(other.pdata_[i]);
 		}
 
 		return *this;

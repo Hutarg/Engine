@@ -8,13 +8,13 @@ namespace blueberry
 	TypeList<uint32_t> Pipeline::generations_ = {};
 	TypeList<Pipeline::Pipeline_T> Pipeline::pipelines_ = {};
 
-    Pipeline::Pipeline(TypeList<Shader> shaders)
+    Pipeline::Pipeline(TypeList<Shader>&& shaders)
     {
 		Pipeline_T pipeline_T = {};
 
         TypeList<VkPipelineShaderStageCreateInfo> shaderStages = {};
 
-        for (Shader shader : shaders)
+        for (const Shader& shader : shaders)
         {
             VkPipelineShaderStageCreateInfo shaderStage{};
             shaderStage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

@@ -116,8 +116,10 @@ namespace blueberry
 		static TypeList<uint32_t> scripts_;
  
 		static TypeList<TypeList<void*>> components_;
+		static TypeList<void(*)(void*)> componentDestructors_;
 
 		template<typename T> static uint32_t getComponentTypeID();
+		static void destroyComponents();
 
 		uint32_t index_ = -1;
 		uint32_t generation_ = -1;
@@ -153,6 +155,8 @@ namespace blueberry
 		
 		types_.add(std::type_index(typeid(T)), components_.size());
 		components_.add({});
+		componentDestructors_.add([](void* ptr) { delete static_cast<T*>(ptr); });
+
 		if (std::is_base_of<Script, T>::value) scripts_.add(components_.size() - 1);
 		return components_.size() - 1;
 	}
@@ -164,6 +168,8 @@ namespace blueberry
 
 		TypeList<void*>& pool = components_[type];
 		if (pool.size() <= index_) pool.resize(static_cast<uint64_t>(index_) + 1, {});
+
+		if (components_[type][index_] != nullptr) componentDestructors_[type](components_[type][index_]);
 
 		T* component = new T(t);
 		pool[index_] = static_cast<void*>(component);
@@ -184,6 +190,8 @@ namespace blueberry
 
 		TypeList<void*>& pool = components_[type];
 		if (pool.size() <= index_) pool.resize(static_cast<uint64_t>(index_) + 1, {});
+
+		if (components_[type][index_] != nullptr) componentDestructors_[type](components_[type][index_]);
 
 		T* component = new T(std::forward<Args>(args)...);
 		pool[index_] = static_cast<void*>(component);
@@ -209,6 +217,6 @@ namespace blueberry
 		if (components_.size() <= type) return false;
 		if (components_[type].size() <= index_) return false;
 
-		return true;
+		return components_[type][index_] != nullptr;
 	}
 }

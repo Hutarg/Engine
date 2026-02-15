@@ -405,40 +405,40 @@ namespace blueberry
 			throw - 1;
 		}
 
-		VkDescriptorSetLayoutBinding textureLayoutBinding{};
-
 		if (physicalDevice_.bindlessSupported)
 		{
-			textureLayoutBinding.binding = 2;
+			VkDescriptorSetLayoutBinding textureLayoutBinding{};
+			textureLayoutBinding.binding = 0;
 			textureLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			textureLayoutBinding.descriptorCount = BLUEBERRY_MAX_TEXTURE_COUNT;
-			textureLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL;
+			textureLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT |
+				VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT |
+				VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT;
+
+			VkDescriptorSetLayoutBindingFlagsCreateInfoEXT flagsInfo = {};
+			flagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
+			flagsInfo.pBindingFlags = &bindingFlags;
+			flagsInfo.bindingCount = 1;
+
+			VkDescriptorSetLayoutCreateInfo bindlessLayoutInfo = {};
+			bindlessLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			bindlessLayoutInfo.bindingCount = 1;
+			bindlessLayoutInfo.pBindings = &textureLayoutBinding;
+			bindlessLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
+			bindlessLayoutInfo.pNext = &flagsInfo;
+
+			if (vkCreateDescriptorSetLayout(logicalDevice_.device, &bindlessLayoutInfo, nullptr, &engine_.bindlessDescriptorSetLayout) != VK_SUCCESS)
+			{
+				throw - 1;
+			}
 		}
 		else
 		{
 			// faire le cas contraire
 		}
 
-		VkDescriptorBindingFlagsEXT bindingFlags = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT_EXT |
-			VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT_EXT |
-			VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT_EXT;
-
-		VkDescriptorSetLayoutBindingFlagsCreateInfoEXT flagsInfo = {};
-		flagsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT;
-		flagsInfo.pBindingFlags = &bindingFlags;
-		flagsInfo.bindingCount = 1;
-
-		VkDescriptorSetLayoutCreateInfo bindlessLayoutInfo = {};
-		bindlessLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		bindlessLayoutInfo.bindingCount = 1;
-		bindlessLayoutInfo.pBindings = &textureLayoutBinding;
-		bindlessLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT;
-		bindlessLayoutInfo.pNext = &flagsInfo;
-
-		if (vkCreateDescriptorSetLayout(logicalDevice_.device, &bindlessLayoutInfo, nullptr, &engine_.bindlessDescriptorSetLayout) != VK_SUCCESS)
-		{
-			throw - 1;
-		}
 
 		VkDescriptorPoolSize uboPoolSize{};
 		uboPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -752,7 +752,7 @@ namespace blueberry
 			VkWriteDescriptorSet write = {};
 			write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			write.dstSet = engine_.bindlessDescriptorSet;
-			write.dstBinding = 2;
+			write.dstBinding = 0;
 			write.dstArrayElement = i;
 			write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			write.descriptorCount = 1;
@@ -958,7 +958,8 @@ namespace blueberry
 				vkCmdBindVertexBuffers(commandBuffer, 0, 1, &engine_.vertexBuffer, &offsets);
 				vkCmdBindIndexBuffer(commandBuffer, engine_.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipelineLayout, 0, 1, &engine_.descriptorSets[currentFrame_], 0, nullptr);
+				TypeList<VkDescriptorSet> descriptorSets = { engine_.descriptorSets[currentFrame_], engine_.bindlessDescriptorSet };
+				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipelineLayout, 0, descriptorSets.size(), descriptorSets.data(), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), Entity::components_[Entity::getComponentTypeID<Transform>()].size(), 0, 0, 0);
 
 				vkCmdEndRenderPass(commandBuffer);
@@ -1031,12 +1032,16 @@ namespace blueberry
 
     void Application::terminate()
     {
+		Entity::destroyComponents();
+
 		for (Window::Window_T window : Window::windows_)
 		{
 			glfwDestroyWindow(window.window);
 		}
 
-		if (physicalDevice_.device == VK_NULL_HANDLE)
+		if(logicalDevice_.device != VK_NULL_HANDLE) vkDeviceWaitIdle(logicalDevice_.device);
+
+		if (physicalDevice_.device != VK_NULL_HANDLE)
 		{
 			destroyLogicalDevice();
 		}
@@ -1054,8 +1059,11 @@ namespace blueberry
 
         while (isRunning_)
         {
-			updateWindows();
-			drawSprites();
+			if (logicalDevice_.device != VK_NULL_HANDLE)
+			{
+				updateWindows();
+				drawSprites();
+			}
 
 			// Calcul du dt
 			std::chrono::steady_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
