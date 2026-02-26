@@ -19,6 +19,8 @@ namespace blueberry
 
 		friend class Application;
 
+		friend class Sprite;
+
 	public:
 
 		Pipeline(TypeList<Shader>&& shaders);

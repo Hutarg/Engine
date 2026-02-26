@@ -29,6 +29,8 @@ namespace blueberry
 		friend class Pipeline;
 		friend class Functions;
 
+		friend class Sprite;
+
 	public:
 
 		Window(const char* title, uint32_t width, uint32_t height);

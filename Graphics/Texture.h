@@ -9,7 +9,7 @@ namespace blueberry
 
 	class BLUEBERRY_API Texture
 	{
-	private:
+	protected:
 
 		struct Texture_T;
 
@@ -21,6 +21,8 @@ namespace blueberry
 		uint32_t generation_ = -1;
 
 		friend class Application;
+
+		friend class Sprite;
 
 	public:
 

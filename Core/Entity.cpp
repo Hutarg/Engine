@@ -1,5 +1,7 @@
 #include "Entity.h"
 
+#include "../Graphics/Animation.h"
+
 namespace blueberry
 {
 	TypeList<uint32_t> Entity::freeIndices_ = {};
@@ -13,6 +15,45 @@ namespace blueberry
 
 	Sprite::Sprite(Window window, Pipeline pipeline)
 	{
+		windowIndex_ = window.index_;
+		windowGeneration_ = window.generation_;
+
+		pipelineIndex_ = pipeline.index_;
+		pipelineGeneration_ = pipeline.generation_;
+	}
+
+	Sprite::Sprite(Window window, Pipeline pipeline, Texture texture)
+	{
+		windowIndex_ = window.index_;
+		windowGeneration_ = window.generation_;
+
+		pipelineIndex_ = pipeline.index_;
+		pipelineGeneration_ = pipeline.generation_;
+
+		textureIndex_ = texture.index_;
+		textureGeneration_ = texture.generation_;
+
+		uvs_[0] = Vector3(1, 1, 0);
+		uvs_[1] = Vector3(0, 1, 0);
+		uvs_[2] = Vector3(0, 0, 0);
+		uvs_[3] = Vector3(1, 0, 0);
+	}
+
+	Sprite::Sprite(Window window, Pipeline pipeline, Animation animation)
+	{
+		windowIndex_ = window.index_;
+		windowGeneration_ = window.generation_;
+
+		pipelineIndex_ = pipeline.index_;
+		pipelineGeneration_ = pipeline.generation_;
+
+		textureIndex_ = animation.index_;
+		textureGeneration_ = animation.generation_;
+
+		uvs_[0] = animation;
+		uvs_[1] = Vector3(0, 1, 0);
+		uvs_[2] = Vector3(0, 0, 0);
+		uvs_[3] = Vector3(1, 0, 0);
 	}
 
 	Entity Script::getEntity()
@@ -60,7 +101,7 @@ namespace blueberry
 	Entity::Entity(const Entity& other)
 	{
 		index_ = other.index_;
-		generation_ = generation_;
+		generation_ = other.generation_;
 	}
 
 	Entity::Entity(Entity&& other) noexcept

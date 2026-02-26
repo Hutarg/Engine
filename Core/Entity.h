@@ -18,6 +18,8 @@
 namespace blueberry
 {
 	class Entity;
+	class Texture;
+	class Animation;
 
 	class BLUEBERRY_API alignas(16) Transform
 	{
@@ -65,23 +67,25 @@ namespace blueberry
 	{
 	private:
 
-		// Un sprite ne pourra être dessiner que sur une fenêtre à la fois (au pire dupliquez le sprite)
-		uint32_t windowIndex_;
-		uint32_t windowGeneration_;
+		uint32_t windowIndex_ = -1;
+		uint32_t windowGeneration_ = -1;
 
-		// Les données des sprites seront transmise directement au gpu et aux shaders pour éviter trop de calcul au niveau du cpu 
-		// je met ça pour que le shader sache si il faut afficher l'entité
-		uint32_t pipelineIndex_;
-		uint32_t pipelineGeneration_;
+		uint32_t pipelineIndex_ = -1;
+		uint32_t pipelineGeneration_ = -1;
 
-		// Une entité peut ne pas avoir de texture donc il faut que textureIndex puisse être négatif
-		// L'index peut représenter une texture mais aussi une animation. Ils seront normalement stockées de manière assez similaire.
-		int textureIndex_;
-		int textureGeneration_;
+		uint32_t textureIndex_ = -1;
+		uint32_t textureGeneration_ = -1;
+
+		Vector3 uvs_[4];
+
+		friend class Application;
 
 	public:
 
+		Sprite() = default;
 		Sprite(Window window, Pipeline pipeline);
+		Sprite(Window window, Pipeline pipeline, Texture texture);
+		Sprite(Window window, Pipeline pipeline, Animation animation);
 
 	};
 

@@ -69,9 +69,13 @@ namespace blueberry
 		VkDeviceMemory indexBufferMemory;
 		size_t indexBufferSize;
 
-		TypeList<VkBuffer> ssboBuffers;
-		TypeList<VkDeviceMemory> ssboBufferMemories;
-		TypeList<size_t> ssboBufferSizes;
+		TypeList<VkBuffer> transformBuffers;
+		TypeList<VkDeviceMemory> transformBufferMemories;
+		TypeList<size_t> transformBufferSizes;
+
+		TypeList<VkBuffer> spriteBuffers;
+		TypeList<VkDeviceMemory> spriteBufferMemories;
+		TypeList<size_t> spriteBufferSizes;
 
 		TypeList<VkBuffer> uniformBuffers;
 		TypeList<VkDeviceMemory> uniformBufferMemories;
@@ -126,16 +130,16 @@ namespace blueberry
 		VkSampler sampler;
 
 		bool update;
+
+		TypeList<Vector4> uvs;
 	};
 
 	struct alignas(16) Vertex
 	{
 		glm::vec3 pos;
-		glm::vec3 normal;
-		glm::vec3 uv;
 
-		Vertex() : pos(), normal(), uv() {}
-		Vertex(glm::vec3 pos, glm::vec3 normal, glm::vec3 uv) : pos(pos), normal(normal), uv(uv) {}
+		Vertex() : pos() {}
+		Vertex(glm::vec3 pos) : pos(pos) {}
 	};
 
 	struct alignas(16) UBO

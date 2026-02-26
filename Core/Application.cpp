@@ -387,13 +387,19 @@ namespace blueberry
 		uboLayoutBinding.descriptorCount = 1;
 		uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		VkDescriptorSetLayoutBinding ssboLayoutBinding{};
-		ssboLayoutBinding.binding = 1;
-		ssboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		ssboLayoutBinding.descriptorCount = 1;
-		ssboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		VkDescriptorSetLayoutBinding transformLayoutBinding{};
+		transformLayoutBinding.binding = 1;
+		transformLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		transformLayoutBinding.descriptorCount = 1;
+		transformLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		TypeList<VkDescriptorSetLayoutBinding> layoutBindings = { uboLayoutBinding, ssboLayoutBinding };
+		VkDescriptorSetLayoutBinding spriteLayoutBinding{};
+		spriteLayoutBinding.binding = 2;
+		spriteLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		spriteLayoutBinding.descriptorCount = 1;
+		spriteLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		TypeList<VkDescriptorSetLayoutBinding> layoutBindings = { uboLayoutBinding, transformLayoutBinding, spriteLayoutBinding };
 
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -439,16 +445,19 @@ namespace blueberry
 			// faire le cas contraire
 		}
 
-
 		VkDescriptorPoolSize uboPoolSize{};
 		uboPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		uboPoolSize.descriptorCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
-		VkDescriptorPoolSize ssboPoolSize{};
-		ssboPoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		ssboPoolSize.descriptorCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		VkDescriptorPoolSize transformPoolSize{};
+		transformPoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		transformPoolSize.descriptorCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
-		TypeList<VkDescriptorPoolSize> poolSizes = { uboPoolSize, ssboPoolSize };
+		VkDescriptorPoolSize spritePoolSize{};
+		spritePoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		spritePoolSize.descriptorCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+
+		TypeList<VkDescriptorPoolSize> poolSizes = { uboPoolSize, transformPoolSize, spritePoolSize };
 
 		VkDescriptorPoolCreateInfo descriptorPoolInfo{};
 		descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -559,22 +568,52 @@ namespace blueberry
 			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
 
-		engine_.ssboBufferSizes = TypeList<size_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
-		engine_.ssboBuffers = TypeList<VkBuffer>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
-		engine_.ssboBufferMemories = TypeList<VkDeviceMemory>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.transformBufferSizes = TypeList<size_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.transformBuffers = TypeList<VkBuffer>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.transformBufferMemories = TypeList<VkDeviceMemory>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
 		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			engine_.ssboBufferSizes[i] = 1;
-			engine_.ssboBuffers[i] = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-			engine_.ssboBufferMemories[i] = createDeviceMemory(physicalDevice_.device, logicalDevice_.device, engine_.ssboBuffers[i],
+			engine_.transformBufferSizes[i] = 1;
+			engine_.transformBuffers[i] = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+			engine_.transformBufferMemories[i] = createDeviceMemory(physicalDevice_.device, logicalDevice_.device, engine_.transformBuffers[i],
 				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-			vkBindBufferMemory(logicalDevice_.device, engine_.ssboBuffers[i], engine_.ssboBufferMemories[i], 0);
+			vkBindBufferMemory(logicalDevice_.device, engine_.transformBuffers[i], engine_.transformBufferMemories[i], 0);
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.offset = 0;
-			bufferInfo.buffer = engine_.ssboBuffers[i];
+			bufferInfo.buffer = engine_.transformBuffers[i];
+			bufferInfo.range = VK_WHOLE_SIZE;
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = engine_.descriptorSets[i];
+			descriptorWrite.dstBinding = 1;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+
+			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
+		}
+
+		engine_.spriteBufferSizes = TypeList<size_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.spriteBuffers = TypeList<VkBuffer>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.spriteBufferMemories = TypeList<VkDeviceMemory>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+
+		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			engine_.spriteBufferSizes[i] = 1;
+			engine_.spriteBuffers[i] = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+			engine_.spriteBufferMemories[i] = createDeviceMemory(physicalDevice_.device, logicalDevice_.device, engine_.spriteBuffers[i],
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+			vkBindBufferMemory(logicalDevice_.device, engine_.spriteBuffers[i], engine_.spriteBufferMemories[i], 0);
+
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.offset = 0;
+			bufferInfo.buffer = engine_.spriteBuffers[i];
 			bufferInfo.range = VK_WHOLE_SIZE;
 
 			VkWriteDescriptorSet descriptorWrite{};
@@ -734,6 +773,15 @@ namespace blueberry
 		}
 	}
 
+	void Application::updateSprites()
+	{
+		for (void* s : Entity::components_[Entity::getComponentTypeID<Sprite>()])
+		{
+			Sprite* sprite = static_cast<Sprite*>(s);
+			sprite
+		}
+	}
+
 	void Application::drawSprites()
 	{
 		vkWaitForFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_], VK_TRUE, UINT64_MAX);
@@ -762,18 +810,19 @@ namespace blueberry
 		}
 
 		TypeList<Vertex> vertices = {
-				{ {-0.5f, -0.5f, 0.0f}, {1, 1, 0}, {0, 0, 0} },
-				{ { 0.5f, -0.5f, 0.0f}, {0, 1, 1}, {1, 0, 0} },
-				{ { 0.5f,  0.5f, 0.0f}, {0, 0, 1}, {1, 1, 0} },
-				{ {-0.5f,  0.5f, 0.0f}, {1, 0, 1}, {0, 1, 0} }
+			{ {-0.5f, -0.5f, 0.0f} },
+			{ { 0.5f, -0.5f, 0.0f} },
+			{ { 0.5f,  0.5f, 0.0f} },
+			{ {-0.5f,  0.5f, 0.0f} }
 		};
 
 		TypeList<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
 
-		int vertexBufferSize = vertices.size() * sizeof(Vertex);
-		int indexBufferSize = indices.size() * sizeof(indices[0]);
-		int ssboBufferSize = Entity::components_[Entity::getComponentTypeID<Transform>()].size() * sizeof(Transform);
-		int stagingBufferSize = max(max(vertexBufferSize, indexBufferSize), ssboBufferSize);
+		size_t vertexBufferSize = vertices.size() * sizeof(Vertex);
+		size_t indexBufferSize = indices.size() * sizeof(indices[0]);
+		size_t transformBufferSize = Entity::components_[Entity::getComponentTypeID<Transform>()].size() * sizeof(Transform);
+		size_t spriteBufferSize = Entity::components_[Entity::getComponentTypeID<Sprite>()].size() * sizeof(Sprite);
+		size_t stagingBufferSize = max(max(max(vertexBufferSize, indexBufferSize), transformBufferSize), spriteBufferSize);
 
 		// Modification de la taille des buffers
 
@@ -797,24 +846,51 @@ namespace blueberry
 			vkBindBufferMemory(logicalDevice_.device, engine_.indexBuffer, engine_.indexBufferMemory, 0);
 		}
 
-		if (ssboBufferSize > engine_.ssboBufferSizes[currentFrame_])
+		if (transformBufferSize > engine_.transformBufferSizes[currentFrame_])
 		{
-			engine_.ssboBufferSizes[currentFrame_] = ssboBufferSize;
+			engine_.transformBufferSizes[currentFrame_] = transformBufferSize;
 
-			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.ssboBuffers[currentFrame_], engine_.ssboBufferMemories[currentFrame_],
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ssboBufferSize);
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.transformBuffers[currentFrame_], engine_.transformBufferMemories[currentFrame_],
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, transformBufferSize);
 
-			vkBindBufferMemory(logicalDevice_.device, engine_.ssboBuffers[currentFrame_], engine_.ssboBufferMemories[currentFrame_], 0);
+			vkBindBufferMemory(logicalDevice_.device, engine_.transformBuffers[currentFrame_], engine_.transformBufferMemories[currentFrame_], 0);
 
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.offset = 0;
-			bufferInfo.buffer = engine_.ssboBuffers[currentFrame_];
+			bufferInfo.buffer = engine_.transformBuffers[currentFrame_];
 			bufferInfo.range = VK_WHOLE_SIZE;
 
 			VkWriteDescriptorSet descriptorWrite{};
 			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrite.dstSet = engine_.descriptorSets[currentFrame_];
 			descriptorWrite.dstBinding = 1;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+
+			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
+		}
+
+		// Envoie toutes les données au gpu qui va déterminer si il render les sprites ou pas
+		if (spriteBufferSize > engine_.spriteBufferSizes[currentFrame_])
+		{
+			engine_.spriteBufferSizes[currentFrame_] = spriteBufferSize;
+
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.spriteBuffers[currentFrame_], engine_.spriteBufferMemories[currentFrame_],
+				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, spriteBufferSize);
+
+			vkBindBufferMemory(logicalDevice_.device, engine_.spriteBuffers[currentFrame_], engine_.spriteBufferMemories[currentFrame_], 0);
+
+			VkDescriptorBufferInfo bufferInfo{};
+			bufferInfo.offset = 0;
+			bufferInfo.buffer = engine_.spriteBuffers[currentFrame_];
+			bufferInfo.range = VK_WHOLE_SIZE;
+
+			VkWriteDescriptorSet descriptorWrite{};
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = engine_.descriptorSets[currentFrame_];
+			descriptorWrite.dstBinding = 2;
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			descriptorWrite.descriptorCount = 1;
@@ -855,17 +931,27 @@ namespace blueberry
 			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.indexBuffer, indexBufferSize);
 		}
 
-		if (ssboBufferSize > 0)
+		if (transformBufferSize > 0)
 		{
 			void* data;
-			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, ssboBufferSize, 0, &data);
-			memcpy(data, Entity::components_[Entity::getComponentTypeID<Transform>()].data()[0], ssboBufferSize);
+			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, transformBufferSize, 0, &data);
+			memcpy(data, Entity::components_[Entity::getComponentTypeID<Transform>()].data()[0], transformBufferSize);
 			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
 
-			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.ssboBuffers[currentFrame_], ssboBufferSize);
+			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.transformBuffers[currentFrame_], transformBufferSize);
+		}
+
+		if (spriteBufferSize > 0)
+		{
+			void* data;
+			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, spriteBufferSize, 0, &data);
+			memcpy(data, Entity::components_[Entity::getComponentTypeID<Sprite>()].data()[0], spriteBufferSize);
+			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
+
+			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.spriteBuffers[currentFrame_], spriteBufferSize);
 		}
 		
-		if (engine_.commandBuffers.size() < Window::windows_.size() * Pipeline::pipelines_.size())
+		if (engine_.commandBuffers.size() < Window::windows_.size() * Pipeline::pipelines_.size()) // augmente le nombre de command buffer afin de les submit tous en même temps
 		{
 			int commandBufferSize = engine_.commandBuffers.size();
 			engine_.commandBuffers.resize(Window::windows_.size() * Pipeline::pipelines_.size());
@@ -1080,6 +1166,6 @@ namespace blueberry
 
     void Application::stop()
     {
-        isRunning_ = true;
+        isRunning_ = false;
     }
 }

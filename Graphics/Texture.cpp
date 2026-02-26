@@ -13,12 +13,15 @@ namespace blueberry
 
 	Texture::Texture()
 	{
+		index_ = -1;
+		generation_ = -1;
 	}
 
 	Texture::Texture(File file)
 	{
 		Texture_T texture_T = Texture_T{};
 		texture_T.update = true;
+		texture_T.isAnimation = false;
 
 		Image image = file.decode();
 
