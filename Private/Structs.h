@@ -12,6 +12,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <functional>
+
 #define BLUEBERRY_MAJOR_VERSION 1
 #define BLUEBERRY_MINOR_VERSION 0
 #define BLUEBERRY_PATCH_VERSION 0
@@ -131,7 +133,8 @@ namespace blueberry
 
 		bool update;
 
-		TypeList<Vector4> uvs;
+		// Animation :
+		std::function<Vector4(double)> getUV;
 	};
 
 	struct alignas(16) Vertex

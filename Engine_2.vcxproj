@@ -159,6 +159,7 @@
     <ClInclude Include="Utils\Image.h" />
     <ClInclude Include="Utils\Map.h" />
     <ClInclude Include="Utils\String.h" />
+    <ClInclude Include="Utils\Tuple.h" />
     <ClInclude Include="Utils\TypeList.h" />
   </ItemGroup>
   <ItemGroup>

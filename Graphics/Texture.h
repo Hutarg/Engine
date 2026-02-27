@@ -2,6 +2,7 @@
 
 #include "../blueberry.h"
 #include "../File/File.h"
+#include "../Utils/Image.h"
 
 namespace blueberry
 {
@@ -21,13 +22,16 @@ namespace blueberry
 		uint32_t generation_ = -1;
 
 		friend class Application;
-
 		friend class Sprite;
 
 	public:
 
 		Texture();
 		Texture(File file);
+		Texture(Image image);
+
+		void create(File file);
+		void create(Image image);
 
 	};
 }

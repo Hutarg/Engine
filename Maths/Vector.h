@@ -130,6 +130,21 @@ namespace blueberry
 		float getY() { return y; }
 		float getLength() { return sqrt(x * x + y * y); }
 
+		float& operator[](uint32_t index)
+		{
+			switch (index)
+			{
+			case 0:
+				return x;
+
+			case 1:
+				return y;
+
+			default:
+				throw - 1;
+			}
+		}
+
 		Vector<2> operator+(const Vector<2>& other)
 		{
 			return Vector<2>(x + other.x, y + other.y);
@@ -176,6 +191,25 @@ namespace blueberry
 		float getX() { return x; }
 		float getY() { return y; }
 		float getZ() { return z; }
+		float getLength() { return sqrt(x * x + y * y + z * z); }
+
+		float& operator[](uint32_t index)
+		{
+			switch (index)
+			{
+			case 0:
+				return x;
+
+			case 1:
+				return y;
+
+			case 2:
+				return z;
+
+			default:
+				throw - 1;
+			}
+		}
 
 		Vector<3> operator+(const Vector<3>& other)
 		{
@@ -226,6 +260,28 @@ namespace blueberry
 		float getY() { return y; }
 		float getZ() { return z; }
 		float getW() { return w; }
+		float getLength() { return sqrt(x * x + y * y + z * z + w * w); }
+
+		float& operator[](uint32_t index)
+		{
+			switch (index)
+			{
+			case 0:
+				return x;
+
+			case 1:
+				return y;
+
+			case 2:
+				return z;
+
+			case 3:
+				return w;
+
+			default:
+				throw - 1;
+			}
+		}
 
 		Vector<4> operator+(const Vector<4>& other)
 		{

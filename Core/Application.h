@@ -35,9 +35,9 @@ namespace blueberry
 		static void destroyEngine();
 
 		static void updateWindows();
-		static void updateSprites();
 		static void drawSprites();
-		static void updateScripts(float dt);
+		static void updateSprites(double t);
+		static void updateScripts(double dt);
 
 		friend class Window;
 		friend class Shader;

@@ -773,15 +773,6 @@ namespace blueberry
 		}
 	}
 
-	void Application::updateSprites()
-	{
-		for (void* s : Entity::components_[Entity::getComponentTypeID<Sprite>()])
-		{
-			Sprite* sprite = static_cast<Sprite*>(s);
-			sprite
-		}
-	}
-
 	void Application::drawSprites()
 	{
 		vkWaitForFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_], VK_TRUE, UINT64_MAX);
@@ -935,7 +926,7 @@ namespace blueberry
 		{
 			void* data;
 			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, transformBufferSize, 0, &data);
-			memcpy(data, Entity::components_[Entity::getComponentTypeID<Transform>()].data()[0], transformBufferSize);
+			memcpy(data, Entity::transforms_.data(), transformBufferSize);
 			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
 
 			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.transformBuffers[currentFrame_], transformBufferSize);
@@ -945,13 +936,13 @@ namespace blueberry
 		{
 			void* data;
 			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, spriteBufferSize, 0, &data);
-			memcpy(data, Entity::components_[Entity::getComponentTypeID<Sprite>()].data()[0], spriteBufferSize);
+			memcpy(data, Entity::sprites_.data(), spriteBufferSize);
 			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
 
 			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.spriteBuffers[currentFrame_], spriteBufferSize);
 		}
 		
-		if (engine_.commandBuffers.size() < Window::windows_.size() * Pipeline::pipelines_.size()) // augmente le nombre de command buffer afin de les submit tous en même temps
+		if (engine_.commandBuffers.size() < Window::windows_.size() * Pipeline::pipelines_.size()) // augmente le nombre de command buffer si nécessaire afin de les submit tous en même temps
 		{
 			int commandBufferSize = engine_.commandBuffers.size();
 			engine_.commandBuffers.resize(Window::windows_.size() * Pipeline::pipelines_.size());
@@ -1046,7 +1037,7 @@ namespace blueberry
 
 				TypeList<VkDescriptorSet> descriptorSets = { engine_.descriptorSets[currentFrame_], engine_.bindlessDescriptorSet };
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipelineLayout, 0, descriptorSets.size(), descriptorSets.data(), 0, nullptr);
-				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), Entity::components_[Entity::getComponentTypeID<Transform>()].size(), 0, 0, 0);
+				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), Entity::components_[Entity::getComponentTypeID<Sprite>()].size(), 0, 0, 0);
 
 				vkCmdEndRenderPass(commandBuffer);
 
@@ -1090,7 +1081,38 @@ namespace blueberry
 		currentFrame_ = (currentFrame_ + 1) % BLUEBERRY_MAX_FRAMES_IN_FLIGHT;
 	}
 
-	void Application::updateScripts(float dt)
+	void Application::updateSprites(double dt)
+	{
+		for (void* s : Entity::components_[Entity::getComponentTypeID<Sprite>()])
+		{
+			Sprite* sprite = static_cast<Sprite*>(s);
+
+			if (Texture::generations_[sprite->textureIndex_] != sprite->textureGeneration_)
+			{
+				// La texture n'est plus valide
+				sprite->uvs_[0] = { 0,0,0 };
+				sprite->uvs_[1] = { 0,0,0 };
+				sprite->uvs_[2] = { 0,0,0 };
+				sprite->uvs_[3] = { 0,0,0 };
+				continue;
+			}
+
+			Texture::Texture_T texture = Texture::textures_[sprite->textureIndex_];
+			Vector4 uv = texture.getUV(dt);
+
+			float x = uv.getX();
+			float mx = x + uv.getZ();
+			float y = uv.getY();
+			float my = y + uv.getW();
+
+			sprite->uvs_[0] = { x, y, 0 };
+			sprite->uvs_[1] = { mx,	y, 0 };
+			sprite->uvs_[2] = { mx,  my,  0 };
+			sprite->uvs_[3] = { x, my,  0 };
+		}
+	}
+
+	void Application::updateScripts(double dt)
 	{
 		for (uint32_t scripts : Entity::scripts_)
 		{
@@ -1159,6 +1181,7 @@ namespace blueberry
 			std::cout << 1 / dt << "\n";
 
 			updateScripts(dt);
+			updateSprites(dt);
 
             glfwPollEvents();
         }

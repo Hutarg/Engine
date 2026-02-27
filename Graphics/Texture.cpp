@@ -19,11 +19,24 @@ namespace blueberry
 
 	Texture::Texture(File file)
 	{
+		create(file);
+	}
+
+	Texture::Texture(Image image)
+	{
+		create(image);
+	}
+
+	void Texture::create(File file)
+	{
+		create(file.decode());
+	}
+
+	void Texture::create(Image image)
+	{
 		Texture_T texture_T = Texture_T{};
 		texture_T.update = true;
-		texture_T.isAnimation = false;
-
-		Image image = file.decode();
+		texture_T.getUV = [](double dt) { return Vector4{ 0,0,1,1 }; };
 
 		VkImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -80,11 +93,11 @@ namespace blueberry
 		memcpy(data, image.getPixels().data(), pixelsSize);
 		vkUnmapMemory(Application::logicalDevice_.device, Application::engine_.stagingBufferMemory);
 
-		transitionImageLayout(Application::logicalDevice_.device, Application::logicalDevice_.graphicsQueue, Application::engine_.commandPool, texture_T.image, 
+		transitionImageLayout(Application::logicalDevice_.device, Application::logicalDevice_.graphicsQueue, Application::engine_.commandPool, texture_T.image,
 			VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		copyBufferToImage(Application::logicalDevice_.device, Application::logicalDevice_.graphicsQueue, Application::engine_.commandPool, Application::engine_.stagingBuffer, 
+		copyBufferToImage(Application::logicalDevice_.device, Application::logicalDevice_.graphicsQueue, Application::engine_.commandPool, Application::engine_.stagingBuffer,
 			texture_T.image, static_cast<uint32_t>(image.getWidth()), static_cast<uint32_t>(image.getHeight()));
-		transitionImageLayout(Application::logicalDevice_.device, Application::logicalDevice_.graphicsQueue, Application::engine_.commandPool, texture_T.image, 
+		transitionImageLayout(Application::logicalDevice_.device, Application::logicalDevice_.graphicsQueue, Application::engine_.commandPool, texture_T.image,
 			VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		VkImageViewCreateInfo imageViewCreateInfo{};
@@ -129,11 +142,11 @@ namespace blueberry
 		samplerCreateInfo.minLod = 0.0f;
 		samplerCreateInfo.maxLod = 0.0f;
 
-		if (vkCreateSampler(Application::logicalDevice_.device, &samplerCreateInfo, nullptr, &texture_T.sampler) != VK_SUCCESS) 
+		if (vkCreateSampler(Application::logicalDevice_.device, &samplerCreateInfo, nullptr, &texture_T.sampler) != VK_SUCCESS)
 		{
-			throw -1;
+			throw - 1;
 		}
-		
+
 		if (freeIndices_.empty())
 		{
 			index_ = generations_.size();
