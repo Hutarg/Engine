@@ -1,17 +1,14 @@
 #include "Entity.h"
 
+#include <chrono>
+
 #include "../Graphics/Animation.h"
+#include "../Private/Structs.h"
 
 namespace blueberry
 {
 	TypeList<uint32_t> Entity::freeIndices_ = {};
 	TypeList<uint32_t> Entity::generations_ = {};
-
-	Map<std::type_index, uint32_t> Entity::types_ = {};
-	TypeList<uint32_t> Entity::scripts_ = {};
-
-	TypeList<TypeList<void*>> Entity::components_ = {};
-	TypeList<void(*)(void*)> Entity::componentDestructors_ = {};
 
 	Sprite::Sprite(Window window, Pipeline pipeline)
 	{
@@ -50,10 +47,16 @@ namespace blueberry
 		textureIndex_ = animation.index_;
 		textureGeneration_ = animation.generation_;
 
-		uvs_[0] = animation;
-		uvs_[1] = Vector3(0, 1, 0);
-		uvs_[2] = Vector3(0, 0, 0);
-		uvs_[3] = Vector3(1, 0, 0);
+		Vector4 uv = Texture::textures_[animation.index_].getUV(0);
+		float x = uv.getX();
+		float mx = x + uv.getZ();
+		float y = uv.getY();
+		float my = y + uv.getW();
+
+		uvs_[0] = { mx, my, 0 };
+		uvs_[1] = { x,	my, 0 };
+		uvs_[2] = { x,  y,  0 };
+		uvs_[3] = { mx, y,  0 };
 	}
 
 	Entity Script::getEntity()
@@ -61,22 +64,10 @@ namespace blueberry
 		return Entity(index_, generation_);
 	}
 
-	void Entity::destroyComponents()
-	{
-		for (int i = 0; i < Entity::components_.size(); i++)
-		{
-			for (int j = 0; j < Entity::components_[i].size(); j++)
-			{
-				componentDestructors_[i](Entity::components_[i][j]);
-				Entity::components_[i][j] = nullptr;
-			}
-		}
-	}
-
 	Entity::Entity(uint32_t index, uint32_t generation)
 	{
-		this->index_ = index;
-		this->generation_ = generation;
+		index_ = index;
+		generation_ = generation;
 	}
 
 	Entity::Entity()
@@ -115,7 +106,7 @@ namespace blueberry
 		destroy();
 	}
 
-	bool Entity::isDestroyed() const
+	bool Entity::isAlive() const
 	{
 		if (index_ == -1) return false;
 		if (generations_[index_] != generation_) return false;
@@ -124,10 +115,7 @@ namespace blueberry
 
 	void Entity::destroy() const
 	{
-		if (index_ != -1)
-		{
-			freeIndices_.add(index_);
-			generations_[index_]++;
-		}
 	}
+
+
 }

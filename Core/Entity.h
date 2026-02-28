@@ -113,23 +113,27 @@ namespace blueberry
 	{
 	private:
 
-		static TypeList<uint32_t> freeIndices_;	// indices libres pour éviter un overflow
-		static TypeList<uint32_t> generations_;	// pour s'assurer qu'une entité n'a pas été détruite pour éviter une erreur silencieuse.
+		template<typename T> struct ComponentPool
+		{
+			TypeList<T> components;
+			TypeList<uint32_t> entitiesIndices;			// entitiesIndices[componentIndex] -> EntityIndex
+			TypeList<uint32_t> componentsIndices;		// componentsIndices[entityIndex] -> ComponentIndex
+		};
 
-		static Map<std::type_index, uint32_t> types_;
-		static TypeList<uint32_t> scripts_;
- 
-		static TypeList<TypeList<void*>> components_;
-		static TypeList<void(*)(void*)> componentDestructors_;
+		template<typename T> static ComponentPool<T>& getComponentPool()
+		{
+			static ComponentPool<T> pool;
+			return pool;
+		}
 
-		template<typename T> static uint32_t getComponentTypeID();
-		static void destroyComponents();
+		static TypeList<uint32_t> freeIndices_;
+		static TypeList<uint32_t> generations_;
 
-		uint32_t index_ = -1;
-		uint32_t generation_ = -1;
+		uint32_t index_;
+		uint32_t generation_;
 
 		Entity(uint32_t index, uint32_t generation);
-
+		
 		friend class Application;
 		friend class Script;
 
@@ -140,7 +144,7 @@ namespace blueberry
 		Entity(Entity&& other) noexcept;
 		~Entity();
 
-		bool isDestroyed() const;
+		bool isAlive() const;
 		void destroy() const;
 
 		template<typename T> T& setComponent(T component);
@@ -151,76 +155,45 @@ namespace blueberry
 
 	};
 
-	template<typename T> uint32_t Entity::getComponentTypeID()
+	template<typename T> inline T& Entity::setComponent(T component)
 	{
-		int index = types_.getKeys().getIndex(std::type_index(typeid(T))); // changer getIndex pour du log(n)
+		ComponentPool<T>& pool = getComponentPool<T>();
 
-		if (index != -1) return index;
+		if (hasComponent<T>())
+		{
+			pool.components[pool.componentsIndices[index_]] = component;
+			return pool.components[pool.componentsIndices[index_]];
+		}
 		
-		types_.add(std::type_index(typeid(T)), components_.size());
-		components_.add({});
-		componentDestructors_.add([](void* ptr) { delete static_cast<T*>(ptr); });
+		if (index_ >= pool.entitiesIndices.size()) pool.entitiesIndices.resize(index_ + 1, -1);
 
-		if (std::is_base_of<Script, T>::value) scripts_.add(components_.size() - 1);
-		return components_.size() - 1;
+		pool.componentsIndices[index_] = pool.components.size();
+		pool.entitiesIndices.add(index_);
+		pool.components.add(component);
 	}
 
-	template<typename T> T& Entity::setComponent(T t)
+	template<typename T, typename ...Args> inline T& Entity::setComponent(Args&&... args)
 	{
-		uint32_t type = getComponentTypeID<T>();
-		if (components_.size() <= type) components_.resize(static_cast<size_t>(type) + 1, {});
-
-		TypeList<void*>& pool = components_[type];
-		if (pool.size() <= index_) pool.resize(static_cast<uint64_t>(index_) + 1, {});
-
-		if (components_[type][index_] != nullptr) componentDestructors_[type](components_[type][index_]);
-
-		T* component = new T(t);
-		pool[index_] = static_cast<void*>(component);
-
-		if (std::is_base_of<Script, T>::value)
-		{
-			((Script*)component)->index_ = index_;
-			((Script*)component)->generation_ = generation_;
-		}
-
-		return *component;
+		return setComponent(T(std::forward<Args>(args)...));
 	}
 
-	template<typename T, typename... Args> T& Entity::setComponent(Args&&... args)
+	template<typename T> inline T& Entity::getComponent()
 	{
-		uint32_t type = getComponentTypeID<T>();
-		if (components_.size() <= type) components_.resize(static_cast<size_t>(type) + 1, {});
+		ComponentPool<T> pool = getComponentPool<T>();
 
-		TypeList<void*>& pool = components_[type];
-		if (pool.size() <= index_) pool.resize(static_cast<uint64_t>(index_) + 1, {});
+		if (index_ >= pool.entitiesIndices.size()) throw - 1;
+		if (pool.entitiesIndices[index_] >= pool.components.size()) throw - 1;
 
-		if (components_[type][index_] != nullptr) componentDestructors_[type](components_[type][index_]);
-
-		T* component = new T(std::forward<Args>(args)...);
-		pool[index_] = static_cast<void*>(component);
-
-		if (std::is_base_of<Script, T>::value)
-		{
-			((Script*)component)->index_ = index_;
-			((Script*)component)->generation_ = generation_;
-		}
-
-		return *component;
+		return pool.components[pool.entitiesIndices[index_]];
 	}
 
-	template<typename T> T& Entity::getComponent()
+	template<typename T> inline bool Entity::hasComponent()
 	{
-		return *static_cast<T*>(components_[getComponentTypeID<T>()][index_]);
-	}
+		ComponentPool<T>& pool = getComponentPool<T>();
 
-	template<typename T> bool Entity::hasComponent()
-	{
-		uint32_t type = getComponentTypeID<T>();
+		if (index_ >= pool.componentsIndices.size()) return false;
 
-		if (components_.size() <= type) return false;
-		if (components_[type].size() <= index_) return false;
-
-		return components_[type][index_] != nullptr;
+		uint32_t componentIndex = pool.componentsIndices[index_];
+		return componentIndex < pool.components.size() and pool.entitiesIndices[componentIndex] == index_;
 	}
 }
