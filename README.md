@@ -14,9 +14,3 @@ Le moteur est structuré sous la forme d'un [ECS](https://en.wikipedia.org/wiki/
  - [vulkan](https://www.vulkan.org)
  - [glm](https://www.opengl.org/sdk/libs/GLM/)
  - [lodepng](https://github.com/lvandeve/lodepng)
-
-### TODO :
- - [x] Dessiner les sprites dans la boucle principale
- - [x] Ajout des textures
- - [ ] Mettre en place la physique pour les entités
- - [ ] Ajout de la sérialisation
