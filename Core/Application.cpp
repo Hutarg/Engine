@@ -775,6 +775,8 @@ namespace blueberry
 
 	void Application::drawSprites()
 	{
+		std::cout << Entity::getComponentPool<Transform>().components.size() << "\n";
+
 		vkWaitForFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_], VK_TRUE, UINT64_MAX);
 		vkResetFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_]);
 
@@ -1039,6 +1041,7 @@ namespace blueberry
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipelineLayout, 0, descriptorSets.size(), descriptorSets.data(), 0, nullptr);
 				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), Entity::getComponentPool<Sprite>().components.size(), 0, 0, 0);
 
+
 				vkCmdEndRenderPass(commandBuffer);
 
 				if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
@@ -1083,7 +1086,7 @@ namespace blueberry
 
 	void Application::updateSprites(double dt)
 	{
-		for (Sprite sprite : Entity::getComponentPool<Sprite>().components)
+		for (Sprite& sprite : Entity::getComponentPool<Sprite>().components)
 		{
 			if (Texture::generations_[sprite.textureIndex_] != sprite.textureGeneration_)
 			{
@@ -1095,7 +1098,7 @@ namespace blueberry
 				continue;
 			}
 
-			Texture::Texture_T texture = Texture::textures_[sprite.textureIndex_];
+			Texture::Texture_T& texture = Texture::textures_[sprite.textureIndex_];
 			Vector4 uv = texture.getUV(dt);
 
 			float x = uv.getX();
@@ -1112,15 +1115,15 @@ namespace blueberry
 
 	void Application::updateScripts(double dt)
 	{
-		/*for (uint32_t scripts : Entity::scripts_)
+		for (Entity::ComponentPool<Script*> scriptPool : Entity::scriptPools.getValues())
 		{
-			for (void* script : Entity::components_[scripts])
+			for (Script* script : scriptPool.components)
 			{
 				if (script == nullptr) continue;
 
-				((Script*)script)->update(dt);
+				script->update(dt);
 			}
-		}*/
+		}
 	}
 
 	void Application::init()

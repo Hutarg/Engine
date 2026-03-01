@@ -28,6 +28,7 @@ namespace blueberry
 		void remove(Key key);
 
 		TypeList<Key> getKeys();
+		TypeList<Value> getValues();
 
 		class Iterator
 		{
@@ -173,6 +174,11 @@ namespace blueberry
 	template<typename Key, typename Value> inline TypeList<Key> Map<Key, Value>::getKeys()
 	{
 		return TypeList<Key>(pkeys_, size_);
+	}
+
+	template<typename Key, typename Value> inline TypeList<Value> Map<Key, Value>::getValues()
+	{
+		return TypeList<Value>(pvalues_, size_);
 	}
 
 	template<typename Key, typename Value> inline Map<Key, Value>::Iterator::Iterator(Key* pkeys, Value* pvalues, int index)

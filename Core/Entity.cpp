@@ -7,6 +7,9 @@
 
 namespace blueberry
 {
+	Map<std::type_index, void*> Entity::componentPools = {};
+	Map<std::type_index, Entity::ComponentPool<Script*>> Entity::scriptPools = {};
+
 	TypeList<uint32_t> Entity::freeIndices_ = {};
 	TypeList<uint32_t> Entity::generations_ = {};
 
@@ -101,21 +104,10 @@ namespace blueberry
 		generation_ = other.generation_;
 	}
 
-	Entity::~Entity()
-	{
-		destroy();
-	}
-
 	bool Entity::isAlive() const
 	{
 		if (index_ == -1) return false;
 		if (generations_[index_] != generation_) return false;
 		return true;
 	}
-
-	void Entity::destroy() const
-	{
-	}
-
-
 }
