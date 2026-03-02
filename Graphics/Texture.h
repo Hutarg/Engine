@@ -1,12 +1,11 @@
 #pragma once
 
 #include "../blueberry.h"
-#include "../File/File.h"
-#include "../Utils/Image.h"
 
 namespace blueberry
 {
 	class File;
+	class Image;
 
 	class BLUEBERRY_API Texture
 	{

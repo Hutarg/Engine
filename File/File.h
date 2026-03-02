@@ -7,7 +7,6 @@
 
 namespace blueberry
 {
-	class String;
 	class Image;
 
 	class BLUEBERRY_API File

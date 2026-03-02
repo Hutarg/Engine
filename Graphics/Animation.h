@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Texture.h"
-#include "../Utils/Tuple.h"
+#include "../blueberry.h"
 
 namespace blueberry
 {
-	class Animation : public Texture
+	class Texture;
+
+	class BLUEBERRY_API Animation : public Texture
 	{
 	private:
 

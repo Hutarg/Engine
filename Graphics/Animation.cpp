@@ -19,7 +19,7 @@ namespace blueberry
 			uvs[i][3] /= image.getHeight();
 		}
 
-		Texture::textures_[this->index_].getUV = [&uvs, &frameDuration](double dt) -> Vector4
+		Texture::textures_[this->index_].getUV = [uvs, frameDuration](double dt) -> Vector4
 			{
 				static int frame = 0;
 				static double time = 0;
@@ -28,7 +28,7 @@ namespace blueberry
 				if (time > frameDuration)
 				{
 					time = 0;
-					frame++;
+					frame = (frame + 1) % uvs.size();
 				}
 
 				return uvs[frame];
@@ -48,7 +48,7 @@ namespace blueberry
 			uvs[i][3] /= image.getHeight();
 		}
 
-		Texture::textures_[this->index_].getUV = [&uvs, &getFrame](double dt) -> Vector4
+		Texture::textures_[this->index_].getUV = [uvs, getFrame](double dt) -> Vector4
 			{
 				return uvs[getFrame(dt)];
 			};

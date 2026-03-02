@@ -49,7 +49,7 @@ namespace blueberry
 		int getIndex(T value);
 		TypeList<int> getIndices(T value);
 
-		T& operator[](int index);
+		T& operator[](int index) const;
 		TypeList<T> operator+(TypeList<T>& other);
 		void operator+=(TypeList<T> other);
 		TypeList<T>& operator=(const TypeList<T>& other);
@@ -395,7 +395,7 @@ namespace blueberry
 		return indices;
 	}
 
-	template<typename T> inline T& TypeList<T>::operator[](int index)
+	template<typename T> inline T& TypeList<T>::operator[](int index) const
 	{
 		if (index < 0) index += static_cast<int>(size_);
 		if (index < 0 || index >= size_) throw -1;

@@ -145,6 +145,7 @@
     <ClInclude Include="Core\Entity.h" />
     <ClInclude Include="File\File.h" />
     <ClInclude Include="Graphics\Animation.h" />
+    <ClInclude Include="Graphics\Button.h" />
     <ClInclude Include="Private\lodepng.h" />
     <ClInclude Include="Graphics\Pipeline.h" />
     <ClInclude Include="Graphics\Shader.h" />
