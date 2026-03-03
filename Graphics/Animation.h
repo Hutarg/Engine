@@ -1,6 +1,12 @@
 #pragma once
 
-#include "../blueberry.h"
+#include "../api.h"
+
+#include "../Graphics/Texture.h"
+
+#include "../File/File.h"
+
+#include "../Maths/Vector.h"
 
 namespace blueberry
 {

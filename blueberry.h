@@ -1,12 +1,6 @@
 #pragma once
 
-#ifdef BLUEBERRY_EXPORTS
-	#define BLUEBERRY_API __declspec(dllexport)
-#else
-	#define BLUEBERRY_API __declspec(dllimport)
-#endif
-
-#include <cstdint>
+#include "api.h"
 
 #include "Core/Application.h"
 #include "Core/Entity.h"
@@ -17,6 +11,7 @@
 #include "Graphics/Shader.h"
 #include "Graphics/Pipeline.h"
 #include "Graphics/Texture.h"
+#include "Graphics/Animation.h"
 
 #include "Maths/Functions.h"
 //#include "Maths/Matrix.h"

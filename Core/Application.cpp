@@ -11,6 +11,9 @@
 #include "../Private/Functions.h"
 
 #include "../Graphics/Window.h"
+#include "../Graphics/Pipeline.h"
+
+#include "../Utils/TypeList.h"
 
 #ifndef BLUEBERRY_ENABLE_VALIDATION_LAYERS
 #ifdef NDEBUG 

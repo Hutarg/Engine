@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="api.h" />
     <ClInclude Include="blueberry.h" />
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Entity.h" />

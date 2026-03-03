@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../blueberry.h"
+#include "../api.h"
+
+#include <cstring>
 
 namespace blueberry
 {

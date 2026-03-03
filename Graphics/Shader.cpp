@@ -1,8 +1,10 @@
 #include "Shader.h"
 
+#include <fstream>
+
 #include "../Private/Structs.h"
 
-#include <fstream>
+#include "../Utils/TypeList.h"
 
 namespace blueberry
 {

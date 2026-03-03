@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../blueberry.h"
+#include "../api.h"
+
+#include "Shader.h"
 
 namespace blueberry
 {

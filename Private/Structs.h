@@ -5,6 +5,7 @@
 #include "../Graphics/Window.h"
 #include "../Graphics/Shader.h"
 #include "../Graphics/Texture.h"
+#include "../Graphics/Pipeline.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

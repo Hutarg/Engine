@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace blueberry
 {
 	template<typename T, typename D> auto max(T a, D b)
