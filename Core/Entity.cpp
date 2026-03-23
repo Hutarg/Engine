@@ -110,4 +110,9 @@ namespace blueberry
 		if (generations_[index_] != generation_) return false;
 		return true;
 	}
+
+	void Entity::kill()
+	{
+
+	}
 }

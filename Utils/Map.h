@@ -3,6 +3,7 @@
 #include <initializer_list>
 
 #include "TypeList.h"
+#include "Tuple.h"
 
 namespace blueberry
 {
@@ -20,6 +21,7 @@ namespace blueberry
 	public:
 
 		Map();
+		Map(std::initializer_list<Tuple<Key, Value>> list);
 		Map(const Map& other);
 		Map(Map&& other);
 		~Map();
@@ -80,6 +82,22 @@ namespace blueberry
 		capacity_ = 0;
 		pkeys_ = nullptr;
 		pvalues_ = nullptr;
+	}
+
+	template<typename Key, typename Value> inline Map<Key, Value>::Map(std::initializer_list<Tuple<Key, Value>> list)
+	{
+		size_ = list.size();
+		capacity_ = size_;
+
+		pkeys_ = static_cast<Key*>(::operator new(sizeof(Key) * capacity_));
+		pvalues_ = static_cast<Value*>(::operator new(sizeof(Value) * capacity_));
+
+		for (int i = 0; i < capacity_; i++)
+		{
+
+			new (&pkeys_[i]) Tuple<Key,Value>(*(list.begin() + i))->get<Key>(0);
+			new (&pvalues_[i]) Tuple<Key, Value>(*(list.begin() + i))->get<Value>(1);
+		}
 	}
 
 	template<typename Key, typename Value> inline Map<Key, Value>::Map(const Map& other)

@@ -36,7 +36,7 @@ namespace blueberry
 
 		static void updateWindows();
 		static void drawSprites();
-		static void updateSprites(double t);
+		static void updateSprites(double dt);
 		static void updateScripts(double dt);
 
 		friend class Window;

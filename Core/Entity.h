@@ -155,6 +155,7 @@ namespace blueberry
 		Entity(Entity&& other) noexcept;
 
 		bool isAlive() const;
+		void kill();
 
 		template<typename T> T& setComponent(T component);
 		template<typename T, typename... Args> T& setComponent(Args&&... args);

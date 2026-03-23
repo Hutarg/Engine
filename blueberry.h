@@ -13,6 +13,10 @@
 #include "Graphics/Texture.h"
 #include "Graphics/Animation.h"
 
+#include "Graphics/UI/Widget2D.h"
+#include "Graphics/UI/Button2D.h"
+#include "Graphics/UI/Panel2D.h"
+
 #include "Maths/Functions.h"
 //#include "Maths/Matrix.h"
 #include "Maths/Vector.h"

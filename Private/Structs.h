@@ -7,6 +7,10 @@
 #include "../Graphics/Texture.h"
 #include "../Graphics/Pipeline.h"
 
+#include "../Graphics/UI/Widget2D.h"
+#include "../Graphics/UI/Panel2D.h"
+#include "../Graphics/UI/Button2D.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -136,6 +140,36 @@ namespace blueberry
 
 		// Animation :
 		std::function<Vector4(double)> getUV;
+	};
+
+	struct Button2D::Button2D_T
+	{
+		uint32_t shaderIndex_;
+		uint32_t textureIndex_;
+
+		Vector2 position_;
+		Vector2 size_;
+		int zIndex_;
+
+		bool visible_;
+
+		Button2D_T(uint32_t shaderIndex, uint32_t textureIndex, Vector2 position, Vector2 size, int zIndex, bool visible)
+			: shaderIndex_(shaderIndex), textureIndex_(textureIndex), position_(position), size_(size), zIndex_(zIndex), visible_(visible) {}
+	};
+
+	struct Panel2D::Panel2D_T
+	{
+		uint32_t shaderIndex_;
+		uint32_t textureIndex_;
+
+		Vector2 position_;
+		Vector2 size_;
+		int zIndex_;
+
+		bool visible_ = true;
+
+		Panel2D_T(uint32_t shaderIndex, uint32_t textureIndex, Vector2 position, Vector2 size, int zIndex, bool visible)
+			: shaderIndex_(shaderIndex), textureIndex_(textureIndex), position_(position), size_(size), zIndex_(zIndex), visible_(visible) {}
 	};
 
 	struct alignas(16) Vertex

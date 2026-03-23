@@ -778,8 +778,6 @@ namespace blueberry
 
 	void Application::drawSprites()
 	{
-		std::cout << Entity::getComponentPool<Transform>().components.size() << "\n";
-
 		vkWaitForFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_], VK_TRUE, UINT64_MAX);
 		vkResetFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_]);
 

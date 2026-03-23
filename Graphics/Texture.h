@@ -25,6 +25,7 @@ namespace blueberry
 
 		friend class Application;
 		friend class Sprite;
+		friend class Widget2D;
 
 	public:
 

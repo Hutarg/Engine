@@ -1,0 +1,12 @@
+#include "Panel2D.h"
+
+#include "../../Private/Structs.h"
+
+namespace blueberry
+{
+	void Panel2D::update(float dt)
+	{
+	}
+
+	Panel2D::Panel2D(Vector2 position, Vector2 size, int zIndex, bool visible) : Widget2D(new Panel2D_T(0, 0, position, size, zIndex, visible)) {}
+}

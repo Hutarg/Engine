@@ -147,6 +147,9 @@
     <ClInclude Include="File\File.h" />
     <ClInclude Include="Graphics\Animation.h" />
     <ClInclude Include="Graphics\Button.h" />
+    <ClInclude Include="Graphics\UI\Button2D.h" />
+    <ClInclude Include="Graphics\UI\Panel2D.h" />
+    <ClInclude Include="Graphics\UI\Widget2D.h" />
     <ClInclude Include="Private\lodepng.h" />
     <ClInclude Include="Graphics\Pipeline.h" />
     <ClInclude Include="Graphics\Shader.h" />
@@ -175,6 +178,9 @@
     <ClCompile Include="Core\Entity.cpp" />
     <ClCompile Include="File\File.cpp" />
     <ClCompile Include="Graphics\Animation.cpp" />
+    <ClCompile Include="Graphics\UI\Button2D.cpp" />
+    <ClCompile Include="Graphics\UI\Panel2D.cpp" />
+    <ClCompile Include="Graphics\UI\Widget2D.cpp" />
     <ClCompile Include="Private\lodepng.cpp" />
     <ClCompile Include="Graphics\Pipeline.cpp" />
     <ClCompile Include="Graphics\Shader.cpp" />
