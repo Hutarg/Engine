@@ -40,6 +40,8 @@ namespace blueberry
 	Application::LogicalDevice_T Application::logicalDevice_ = {};
 	Application::Engine_T Application::engine_ = {};
 
+	const char* Application::defaultFolder_ = "";
+
 	bool Application::isRunning_ = false;
 	uint32_t Application::currentFrame_ = 0;
 
@@ -524,23 +526,50 @@ namespace blueberry
 			throw - 1;
 		}
 
-		engine_.stagingBuffer = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+		TypeList<Vertex> vertices = {
+			{ {-0.5f, -0.5f, 0.0f} },
+			{ { 0.5f, -0.5f, 0.0f} },
+			{ { 0.5f,  0.5f, 0.0f} },
+			{ {-0.5f,  0.5f, 0.0f} }
+		};
+
+		TypeList<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
+
+		size_t vertexBufferSize = vertices.size() * sizeof(Vertex);
+		size_t indexBufferSize = indices.size() * sizeof(indices[0]);
+
+		engine_.stagingBufferSize = max(vertexBufferSize, indexBufferSize);
+
+		engine_.stagingBuffer = createBuffer(logicalDevice_.device, engine_.stagingBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 		engine_.stagingBufferMemory = createDeviceMemory(physicalDevice_.device, logicalDevice_.device, engine_.stagingBuffer,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 		vkBindBufferMemory(logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, 0);
 
-		engine_.vertexBuffer = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		engine_.vertexBuffer = createBuffer(logicalDevice_.device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 		engine_.vertexBufferMemory = createDeviceMemory(physicalDevice_.device, logicalDevice_.device, engine_.vertexBuffer,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		vkBindBufferMemory(logicalDevice_.device, engine_.vertexBuffer, engine_.vertexBufferMemory, 0);
 
-		engine_.indexBuffer = createBuffer(logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+		engine_.indexBuffer = createBuffer(logicalDevice_.device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 		engine_.indexBufferMemory = createDeviceMemory(physicalDevice_.device, logicalDevice_.device, engine_.indexBuffer,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 		vkBindBufferMemory(logicalDevice_.device, engine_.indexBuffer, engine_.indexBufferMemory, 0);
+
+		void* data;
+		vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, vertexBufferSize, 0, &data);
+		memcpy(data, vertices.data(), vertexBufferSize);
+		vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
+
+		copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.vertexBuffer, vertexBufferSize);
+
+		vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, indexBufferSize, 0, &data);
+		memcpy(data, indices.data(), indexBufferSize);
+		vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
+
+		copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.indexBuffer, indexBufferSize);
 
 		engine_.uniformBuffers = TypeList<VkBuffer>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 		engine_.uniformBufferMemories = TypeList<VkDeviceMemory>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
@@ -647,6 +676,16 @@ namespace blueberry
 				throw - 1;
 			}
 		}
+
+		// Rajouter des valeurs par défaut directement intégrés dans le moteur
+		engine_.defaultTexture = Texture(File((defaultFolder_ + String("/default.png")).cStr()));
+		Shader defaultUiVertexShader = Shader((defaultFolder_ + String("/default.vert")).cStr(), ShaderType::VERTEX);
+		Shader defaultUiFragmentShader = Shader((defaultFolder_ + String("/default.frag")).cStr(), ShaderType::FRAGMENT);
+
+		engine_.defaultUiPipeline = Pipeline({ defaultUiVertexShader, defaultUiFragmentShader });
+
+		defaultUiFragmentShader.destroy();
+		defaultUiVertexShader.destroy();
 	}
 
 	void Application::destroyEngine()
@@ -776,12 +815,13 @@ namespace blueberry
 		}
 	}
 
-	void Application::drawSprites()
+	void Application::draw()
 	{
 		vkWaitForFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_], VK_TRUE, UINT64_MAX);
 		vkResetFences(logicalDevice_.device, 1, &engine_.inFlightFences[currentFrame_]);
 
 		// Update les textures
+
 		for (int i = 0; i < Texture::textures_.size(); i++)
 		{
 			if (!Texture::textures_[i].update) continue;
@@ -803,41 +843,20 @@ namespace blueberry
 			vkUpdateDescriptorSets(Application::logicalDevice_.device, 1, &write, 0, nullptr);
 		}
 
-		TypeList<Vertex> vertices = {
-			{ {-0.5f, -0.5f, 0.0f} },
-			{ { 0.5f, -0.5f, 0.0f} },
-			{ { 0.5f,  0.5f, 0.0f} },
-			{ {-0.5f,  0.5f, 0.0f} }
-		};
-
-		TypeList<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
-
-		size_t vertexBufferSize = vertices.size() * sizeof(Vertex);
-		size_t indexBufferSize = indices.size() * sizeof(indices[0]);
 		size_t transformBufferSize = Entity::getComponentPool<Transform>().components.size() * sizeof(Transform);
 		size_t spriteBufferSize = Entity::getComponentPool<Sprite>().components.size() * sizeof(Sprite);
-		size_t stagingBufferSize = max(max(max(vertexBufferSize, indexBufferSize), transformBufferSize), spriteBufferSize);
+		size_t stagingBufferSize = max(transformBufferSize, spriteBufferSize);
 
-		// Modification de la taille des buffers
+		// Modification de la taille des buffers si nécessaire
 
-		if (vertexBufferSize > engine_.vertexBufferSize)
+		if (stagingBufferSize > engine_.stagingBufferSize)
 		{
-			engine_.vertexBufferSize = vertexBufferSize;
+			engine_.stagingBufferSize = stagingBufferSize;
 
-			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.vertexBuffer, engine_.vertexBufferMemory, 
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBufferSize);
+			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferSize);
 
-			vkBindBufferMemory(logicalDevice_.device, engine_.vertexBuffer, engine_.vertexBufferMemory, 0);
-		}
-
-		if (indexBufferSize > engine_.indexBufferSize)
-		{
-			engine_.indexBufferSize = indexBufferSize;
-
-			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.indexBuffer, engine_.indexBufferMemory,
-				VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBufferSize);
-
-			vkBindBufferMemory(logicalDevice_.device, engine_.indexBuffer, engine_.indexBufferMemory, 0);
+			vkBindBufferMemory(logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, 0);
 		}
 
 		if (transformBufferSize > engine_.transformBufferSizes[currentFrame_])
@@ -866,7 +885,6 @@ namespace blueberry
 			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
 
-		// Envoie toutes les données au gpu qui va déterminer si il render les sprites ou pas
 		if (spriteBufferSize > engine_.spriteBufferSizes[currentFrame_])
 		{
 			engine_.spriteBufferSizes[currentFrame_] = spriteBufferSize;
@@ -893,37 +911,7 @@ namespace blueberry
 			vkUpdateDescriptorSets(logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
 
-		if (stagingBufferSize > engine_.stagingBufferSize)
-		{
-			engine_.stagingBufferSize = stagingBufferSize;
-
-			recreateBuffer(physicalDevice_.device, logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBufferSize);
-
-			vkBindBufferMemory(logicalDevice_.device, engine_.stagingBuffer, engine_.stagingBufferMemory, 0);
-		}
-
 		// Ecriture des données dans les buffers
-
-		if (vertexBufferSize > 0)
-		{
-			void* data;
-			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, vertexBufferSize, 0, &data);
-			memcpy(data, vertices.data(), vertexBufferSize);
-			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
-
-			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.vertexBuffer, vertexBufferSize);
-		}
-
-		if (indexBufferSize > 0)
-		{
-			void* data;
-			vkMapMemory(logicalDevice_.device, engine_.stagingBufferMemory, 0, indexBufferSize, 0, &data);
-			memcpy(data, indices.data(), indexBufferSize);
-			vkUnmapMemory(logicalDevice_.device, engine_.stagingBufferMemory);
-
-			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.indexBuffer, indexBufferSize);
-		}
 
 		if (transformBufferSize > 0)
 		{
@@ -935,6 +923,8 @@ namespace blueberry
 			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.transformBuffers[currentFrame_], transformBufferSize);
 		}
 
+		// Envoie toutes les données des sprites au shader qui va déterminer lui même si il render les sprites ou pas
+
 		if (spriteBufferSize > 0)
 		{
 			void* data;
@@ -944,17 +934,17 @@ namespace blueberry
 
 			copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.spriteBuffers[currentFrame_], spriteBufferSize);
 		}
-		
-		if (engine_.commandBuffers.size() < Window::windows_.size() * Pipeline::pipelines_.size()) // augmente le nombre de command buffer si nécessaire afin de les submit tous en même temps
+
+		if (engine_.commandBuffers.size() < Window::windows_.size() * (Pipeline::pipelines_.size() + 1)) // augmente le nombre de command buffer si nécessaire afin de submit les draw call en même temps
 		{
 			int commandBufferSize = engine_.commandBuffers.size();
-			engine_.commandBuffers.resize(Window::windows_.size() * Pipeline::pipelines_.size());
+			engine_.commandBuffers.resize(Window::windows_.size()* (Pipeline::pipelines_.size() + 1));
 
 			VkCommandBufferAllocateInfo allocInfo{};
 			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			allocInfo.commandPool = Application::engine_.commandPool;
-			allocInfo.commandBufferCount = Window::windows_.size() * Pipeline::pipelines_.size() - commandBufferSize;
+			allocInfo.commandBufferCount = Window::windows_.size() * (Pipeline::pipelines_.size() + 1) - commandBufferSize;
 
 			if (vkAllocateCommandBuffers(Application::logicalDevice_.device, &allocInfo, &engine_.commandBuffers[commandBufferSize]) != VK_SUCCESS)
 			{
@@ -978,15 +968,71 @@ namespace blueberry
 
 			imageIndices[i] = imageIndex;
 			swapchains[i] = window.swapchain;
-			waitStages[i] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; 
-			
+			waitStages[i] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
 			imageAvailableSemaphores[i] = window.imageAvailableSemaphores[currentFrame_];
 			renderFinishedSemaphores[i] = window.renderFinishedSemaphores[currentFrame_];
+
+			VkRenderPassBeginInfo renderPassInfo{};
+			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			renderPassInfo.renderPass = Window::windowInfos_.renderPass;
+			renderPassInfo.framebuffer = window.framebuffers[imageIndex];
+			renderPassInfo.renderArea.offset = { 0, 0 };
+			renderPassInfo.renderArea.extent = window.extent;
+
+			VkClearValue clearColor = { {{0.5f, 0.0f, 1.0f, 1.0f}} };
+			renderPassInfo.clearValueCount = 1;
+			renderPassInfo.pClearValues = &clearColor;
+
+			VkViewport viewport{};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = (float)window.extent.width;
+			viewport.height = (float)window.extent.height;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+
+			VkRect2D scissor{};
+			scissor.offset = { 0, 0 };
+			scissor.extent = { (unsigned int)window.extent.width, (unsigned int)window.extent.height };
+
+			// Dessine l'UI
+
+			VkCommandBuffer uiCommandBuffer = engine_.commandBuffers[i];
+			vkResetCommandBuffer(uiCommandBuffer, 0);
+
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+			if (vkBeginCommandBuffer(uiCommandBuffer, &beginInfo) != VK_SUCCESS)
+			{
+				throw - 1;
+			}
+
+			vkCmdBeginRenderPass(uiCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+			vkCmdSetViewport(uiCommandBuffer, 0, 1, &viewport);
+			vkCmdSetScissor(uiCommandBuffer, 0, 1, &scissor);
+
+			vkCmdBindPipeline(uiCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::Pipeline::pipelines_[0].pipeline);
+
+			VkDeviceSize offsets = 0;
+			vkCmdBindVertexBuffers(uiCommandBuffer, 0, 1, &engine_.vertexBuffer, &offsets);
+			vkCmdBindIndexBuffer(uiCommandBuffer, engine_.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+			vkCmdEndRenderPass(uiCommandBuffer);
+
+			if (vkEndCommandBuffer(uiCommandBuffer) != VK_SUCCESS)
+			{
+				throw - 1;
+			}
+
+			// Dessine les sprites
 
 			for (int j = 0; j < Pipeline::pipelines_.size(); j++)
 			{
 				Pipeline::Pipeline_T pipeline = Pipeline::pipelines_[j];
-				VkCommandBuffer commandBuffer = engine_.commandBuffers[i * Pipeline::pipelines_.size() + j];
+				VkCommandBuffer commandBuffer = engine_.commandBuffers[i * Pipeline::pipelines_.size() + j + Window::windows_.size()];
 
 				UBO ubo = { glm::lookAt(glm::vec3(0,0,3), glm::vec3(0,0,0), glm::vec3(0,1,0)), glm::perspective(glm::radians(60.0f), ((float)window.extent.width / (float)window.extent.height), 0.1f, 10.0f) };
 
@@ -1004,30 +1050,7 @@ namespace blueberry
 					throw - 1;
 				}
 
-				VkRenderPassBeginInfo renderPassInfo{};
-				renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-				renderPassInfo.renderPass = Window::windowInfos_.renderPass;
-				renderPassInfo.framebuffer = window.framebuffers[imageIndex];
-				renderPassInfo.renderArea.offset = { 0, 0 };
-				renderPassInfo.renderArea.extent = window.extent;
-
-				VkClearValue clearColor = { {{0.5f, 0.0f, 1.0f, 1.0f}} };
-				renderPassInfo.clearValueCount = 1;
-				renderPassInfo.pClearValues = &clearColor;
-
 				vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-				VkViewport viewport{};
-				viewport.x = 0.0f;
-				viewport.y = 0.0f;
-				viewport.width = (float)window.extent.width;
-				viewport.height = (float)window.extent.height;
-				viewport.minDepth = 0.0f;
-				viewport.maxDepth = 1.0f;
-
-				VkRect2D scissor{};
-				scissor.offset = { 0, 0 };
-				scissor.extent = { (unsigned int)window.extent.width, (unsigned int)window.extent.height };
 
 				vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 				vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
@@ -1040,8 +1063,7 @@ namespace blueberry
 
 				TypeList<VkDescriptorSet> descriptorSets = { engine_.descriptorSets[currentFrame_], engine_.bindlessDescriptorSet };
 				vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipelineLayout, 0, descriptorSets.size(), descriptorSets.data(), 0, nullptr);
-				vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), Entity::getComponentPool<Sprite>().components.size(), 0, 0, 0);
-
+				vkCmdDrawIndexed(commandBuffer, 6, Entity::getComponentPool<Sprite>().components.size(), 0, 0, 0);
 
 				vkCmdEndRenderPass(commandBuffer);
 
@@ -1129,16 +1151,17 @@ namespace blueberry
 
 	void Application::init()
 	{
-		init("", 1, 0, 0);
+		init("", 1, 0, 0, "");
 	}
 
-	void Application::init(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion)
-    {
-        if (!glfwInit()) return;
+	void Application::init(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion, const char* defaultFolder)
+	{
+		if (!glfwInit()) return;
 		createInstance(appName, appMajorVersion, appMinorVersion, appPatchVersion);
 
+		defaultFolder_ = defaultFolder;
 		physicalDevice_.device = VK_NULL_HANDLE;
-    }
+	}
 
     void Application::terminate()
     {
@@ -1170,7 +1193,7 @@ namespace blueberry
 			if (logicalDevice_.device != VK_NULL_HANDLE)
 			{
 				updateWindows();
-				drawSprites();
+				draw();
 			}
 
 			// Calcul du dt

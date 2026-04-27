@@ -22,6 +22,7 @@ namespace blueberry
 	{
 		Window_T window_T = {};
 
+		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		window_T.window = glfwCreateWindow(width, height, title, NULL, NULL);
 
@@ -78,7 +79,6 @@ namespace blueberry
 			}
 
 			Application::createLogicalDevice();
-			Application::createEngine();
 
 			// Cherche le meilleur format. Normalement un même format est supporté par toutes les fenêtres. Généraliser un format à toutes les fenêtres
 			// permet d'éviter d'utiliser une même pipeline pour chaque fenêtre et éviter de la dupliquer (ce qui peut être couteux)
@@ -150,6 +150,8 @@ namespace blueberry
 			{
 				throw - 1;
 			}
+
+			Application::createEngine();
 		}
 		else
 		{
@@ -316,6 +318,8 @@ namespace blueberry
 			freeIndices_.remove(-1);
 			windows_[index_] = window_T;
 		}
+
+		glfwShowWindow(window_T.window);
 	}
 
 	void Window::close() const

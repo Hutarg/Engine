@@ -70,11 +70,9 @@ namespace blueberry
 
 		VkBuffer vertexBuffer;
 		VkDeviceMemory vertexBufferMemory;
-		size_t vertexBufferSize;
 
 		VkBuffer indexBuffer;
 		VkDeviceMemory indexBufferMemory;
-		size_t indexBufferSize;
 
 		TypeList<VkBuffer> transformBuffers;
 		TypeList<VkDeviceMemory> transformBufferMemories;
@@ -89,6 +87,9 @@ namespace blueberry
 		TypeList<void*> uniformBufferMaps;
 
 		TypeList<VkFence> inFlightFences;
+
+		Texture defaultTexture;
+		Pipeline defaultUiPipeline;
 	};
 
 	struct Window::Window_T

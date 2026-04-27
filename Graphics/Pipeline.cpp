@@ -8,7 +8,13 @@ namespace blueberry
 	TypeList<uint32_t> Pipeline::generations_ = {};
 	TypeList<Pipeline::Pipeline_T> Pipeline::pipelines_ = {};
 
-    Pipeline::Pipeline(TypeList<Shader>&& shaders)
+	Pipeline::Pipeline()
+	{
+		index_ = -1;
+		generation_ = -1;
+	}
+
+	Pipeline::Pipeline(TypeList<Shader>&& shaders)
     {
 		Pipeline_T pipeline_T = {};
 

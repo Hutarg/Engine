@@ -20,12 +20,27 @@ namespace blueberry
 		String(const char* str);
 		String(const String& other);
 
+		size_t getSize();
+
 		char* str();
 		const char* cStr();
 
 		char& operator[](size_t index);
+		String operator+(String str);
+		String operator+(const char* str);
 
 	};
+
+	inline String operator+(const char* str1, String str2)
+	{
+		size_t size = strlen(str1) + str2.getSize() + 1;
+		char* result = new char[size];
+
+		strcpy_s(result, size, str1);
+		strcat_s(result, size, str2.str());
+
+		return String(result);
+	}
 
 	inline String::String()
 	{
@@ -64,6 +79,11 @@ namespace blueberry
 		std::memcpy(data_, other.data_, size_ + 1);
 	}
 
+	inline size_t String::getSize()
+	{
+		return size_;
+	}
+
 	inline char* String::str()
 	{
 		return data_;
@@ -77,5 +97,21 @@ namespace blueberry
 	inline char& String::operator[](size_t index)
 	{
 		return data_[index];
+	}
+
+	inline String String::operator+(String str)
+	{
+		return String();
+	}
+
+	inline String String::operator+(const char* str)
+	{
+		size_t size = size_ + strlen(str) + 1;
+		char* result = new char[size];
+
+		strcpy_s(result, size, data_);
+		strcat_s(result, size, str);
+
+		return String(result);
 	}
 }

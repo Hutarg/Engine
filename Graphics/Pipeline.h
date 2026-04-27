@@ -25,6 +25,7 @@ namespace blueberry
 
 	public:
 
+		Pipeline();
 		Pipeline(TypeList<Shader>&& shaders);
 
 	};

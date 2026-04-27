@@ -32,5 +32,7 @@ namespace blueberry
 		Shader() = default;
 		Shader(const char* filename, ShaderType type, const char* stageName = "main");
 
+		void destroy();
+
 	};
 }

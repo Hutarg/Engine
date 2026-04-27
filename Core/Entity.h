@@ -83,6 +83,7 @@ namespace blueberry
 	public:
 
 		Sprite() = default;
+		Sprite(Window window);
 		Sprite(Window window, Pipeline pipeline);
 		Sprite(Window window, Pipeline pipeline, Texture texture);
 		Sprite(Window window, Pipeline pipeline, Animation animation);

@@ -13,6 +13,16 @@ namespace blueberry
 	TypeList<uint32_t> Entity::freeIndices_ = {};
 	TypeList<uint32_t> Entity::generations_ = {};
 
+	Sprite::Sprite(Window window)
+	{
+		windowIndex_ = window.index_;
+		windowGeneration_ = window.generation_;
+
+		// Utilise la pipeline de rendu par défaut
+		pipelineIndex_ = 0;
+		pipelineGeneration_ = Pipeline::generations_[0];
+	}
+
 	Sprite::Sprite(Window window, Pipeline pipeline)
 	{
 		windowIndex_ = window.index_;

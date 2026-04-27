@@ -67,4 +67,16 @@ namespace blueberry
 			shaders_[index_] = shader_T;
 		}
 	}
+
+	void Shader::destroy()
+	{
+		if (index_ > 0 && generations_[index_] == generation_)
+		{
+			vkDestroyShaderModule(Application::logicalDevice_.device, shaders_[index_].shader, nullptr);
+			generations_[index_]++;
+
+			index_ = -1;
+			generation_ = -1;
+		}
+	}
 }

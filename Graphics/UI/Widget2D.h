@@ -8,6 +8,15 @@
 
 namespace blueberry
 {
+	enum WidgetState
+	{
+		NORMAL,
+		HOVERED,
+		PRESSED,
+		DISABLED,
+		FOCUSED
+	};
+
 	class BLUEBERRY_API Widget2D
 	{
 	protected:
