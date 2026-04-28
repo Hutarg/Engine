@@ -21,5 +21,7 @@ namespace blueberry
 
 		Button2D(Vector2 position, Vector2 size, int zIndex, bool visible);
 
+		WidgetState getState() override;
+
 	};
 }
