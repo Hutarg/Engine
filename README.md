@@ -16,8 +16,7 @@
 
 ## À propos
 
-Ce projet est la base d'un moteur de jeu développé en C++ conçu pour faciliter le
-développement de jeux vidéos.
+Ce projet est une libraire de moteur de jeu développé en C++ conçu pour la création de jeux vidéos.
 
 ### Librairies utilisés :
  - [glfw](https://www.glfw.org/documentation.html)
@@ -28,12 +27,11 @@ développement de jeux vidéos.
 
 ## Caractéristiques
 
-- ✅ **Rendu graphique**
+- ✅ **Rendu graphique** - Mise en place du GUI en cours
 - ❌ **Système de physique**
 - ❌ **Gestion des ressources**
-- ✅ **Architecture modulaire**
 - ❌ **Support multi-plateforme**
-- ✅ **Système d'événements**
+- ❌ **Système d'événements**
 
 
 ## Prérequis
@@ -52,6 +50,17 @@ cd Engine
 ```
 
 ### 2. Créer le répertoire de compilation
+
+```bash
+mkdir build
+cd build
+```
+
+### 3. Configurer et compiler
+
+```bash
+cmake ..
+```
 
 ## Utilisation
 
