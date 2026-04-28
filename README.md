@@ -12,18 +12,11 @@
 - [Prérequis](#prérequis)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
-- [License](#license)
+- [Wiki](#wiki)
 
 ## À propos
 
-Ce projet est une libraire de moteur de jeu développé en C++ conçu pour la création de jeux vidéos.
-
-### Librairies utilisés :
- - [glfw](https://www.glfw.org/documentation.html)
- - [vulkan](https://www.vulkan.org)
- - [glm](https://www.opengl.org/sdk/libs/GLM/)
- - [lodepng](https://github.com/lvandeve/lodepng)
-
+Ce projet est une libraire développé en C++ conçu pour la création de jeux vidéos.
 
 ## Caractéristiques
 
@@ -38,7 +31,14 @@ Ce projet est une libraire de moteur de jeu développé en C++ conçu pour la cr
 
 Pour utiliser ce moteur, il vous faudra :
 - **C++ 17** ou supérieur
+- **Cmake 3.16** ou supérieur
 - Un compilateur compatible
+
+### Dépendances externes :
+ - [glfw](https://www.glfw.org/documentation.html) (gestion des fenêtres)
+ - [vulkan](https://www.vulkan.org) (rendu graphique)
+ - [glm](https://www.opengl.org/sdk/libs/GLM/) (maths)
+ - [lodepng](https://github.com/lvandeve/lodepng) (lecture de fichiers .png)
 
 ## Installation
 
@@ -80,3 +80,6 @@ int main() {
 }
 ```
 
+## Wiki
+
+Un wiki sera bientôt créé pour une documentation plus complète.
