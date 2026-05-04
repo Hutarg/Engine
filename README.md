@@ -12,35 +12,33 @@
 - [Prérequis](#prérequis)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
-- [License](#license)
+- [Wiki](#wiki)
 
 ## À propos
 
-Ce projet est la base d'un moteur de jeu développé en C++ conçu pour faciliter le
-développement de jeux vidéos.
-
-### Librairies utilisés :
- - [glfw](https://www.glfw.org/documentation.html)
- - [vulkan](https://www.vulkan.org)
- - [glm](https://www.opengl.org/sdk/libs/GLM/)
- - [lodepng](https://github.com/lvandeve/lodepng)
-
+Ce projet est une libraire développé en C++ conçu pour la création de jeux vidéos.
 
 ## Caractéristiques
 
-- ✅ **Rendu graphique**
+- ✅ **Rendu graphique** - Mise en place du GUI en cours
 - ❌ **Système de physique**
 - ❌ **Gestion des ressources**
-- ✅ **Architecture modulaire**
 - ❌ **Support multi-plateforme**
-- ✅ **Système d'événements**
+- ❌ **Système d'événements**
 
 
 ## Prérequis
 
 Pour utiliser ce moteur, il vous faudra :
 - **C++ 17** ou supérieur
+- **Cmake 3.16** ou supérieur
 - Un compilateur compatible
+
+### Dépendances externes :
+ - [glfw](https://www.glfw.org/documentation.html) (gestion des fenêtres)
+ - [vulkan](https://www.vulkan.org) (rendu graphique)
+ - [glm](https://www.opengl.org/sdk/libs/GLM/) (maths)
+ - [lodepng](https://github.com/lvandeve/lodepng) (lecture de fichiers .png)
 
 ## Installation
 
@@ -52,6 +50,17 @@ cd Engine
 ```
 
 ### 2. Créer le répertoire de compilation
+
+```bash
+mkdir build
+cd build
+```
+
+### 3. Configurer et compiler
+
+```bash
+cmake ..
+```
 
 ## Utilisation
 
@@ -80,3 +89,6 @@ int main() {
 }
 ```
 
+## Wiki
+
+Un wiki sera bientôt créé pour une documentation plus complète.
