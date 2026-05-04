@@ -6,6 +6,16 @@
 
 namespace blueberry
 {
+	class BLUEBERRY_API ApplicationListener
+	{
+	public:
+
+		virtual void create() {}
+		virtual void update(float dt) {}
+		virtual void destroy() {}
+
+	};
+
 	class BLUEBERRY_API Application
 	{
 	private:
@@ -19,8 +29,6 @@ namespace blueberry
 		static PhysicalDevice_T physicalDevice_;
 		static LogicalDevice_T logicalDevice_;
 		static Engine_T engine_;
-
-		static const char* defaultFolder_;
 
 		static bool isRunning_;
 		static uint32_t currentFrame_;
@@ -36,8 +44,10 @@ namespace blueberry
 		static void createEngine();
 		static void destroyEngine();
 
-		static void updateWindows();
 		static void draw();
+
+		static void updateWindows();
+		static void updateTextures();
 		static void updateSprites(double dt);
 		static void updateScripts(double dt);
 
@@ -49,10 +59,10 @@ namespace blueberry
 	public:
 
 		static void init();
-		static void init(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion, const char* defaultFolder);
+		static void init(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion);
 		static void terminate();
 
-		static void run();
+		static void run(ApplicationListener* applicationListener);
 		static void stop();
 
 	};

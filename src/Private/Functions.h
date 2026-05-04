@@ -171,6 +171,25 @@ namespace blueberry
 		endCommandBuffer(device, graphicsQueue, commandPool, commandBuffer);
 	}
 
+	static void updateDescriptorSets(VkDevice device, VkDescriptorSet descriptorSet, VkBuffer buffer, uint32_t binding, VkDescriptorType descriptorType)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.offset = 0;
+		bufferInfo.buffer = buffer;
+		bufferInfo.range = VK_WHOLE_SIZE;
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = descriptorSet;
+		descriptorWrite.dstBinding = binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = descriptorType;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+	}
+
 	static void transitionImageLayout(VkDevice device, VkQueue graphicsQueue, VkCommandPool commandPool, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 	{
 		VkCommandBuffer commandBuffer = beginCommandBuffer(device, commandPool);

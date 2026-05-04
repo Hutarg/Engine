@@ -33,6 +33,7 @@ namespace blueberry
 
 	public:
 
+		Window();
 		Window(const char* title, uint32_t width, uint32_t height);
 
 		bool shouldClose() const;
@@ -42,6 +43,8 @@ namespace blueberry
 		uint32_t getWidth() const;
 		uint32_t getHeight() const;
 		Vector2 getSize() const;
+
+		void setClearColor(float r, float g, float b, float a) const;
 
 	};
 }

@@ -60,12 +60,21 @@ cd Engine
 
 using namespace blueberry;
 
+class AppListener : public ApplicationListener
+{
+public:
+
+	Game() = default;
+
+	void create() override
+	{
+		Window window = Window("Ma première fenêtre", 800, 600);
+	}
+};
+
 int main() {
     Application::init();
-    
-    Window window = Window("Ma première fenêtre",800,600);
-    
-    Application::run();
+    Application::run(new AppListener());
     Application::terminate();
     return 0;
 }

@@ -83,7 +83,6 @@ namespace blueberry
 	public:
 
 		Sprite() = default;
-		Sprite(Window window);
 		Sprite(Window window, Pipeline pipeline);
 		Sprite(Window window, Pipeline pipeline, Texture texture);
 		Sprite(Window window, Pipeline pipeline, Animation animation);
@@ -155,7 +154,7 @@ namespace blueberry
 		Entity(const Entity& other);
 		Entity(Entity&& other) noexcept;
 
-		bool isAlive() const;
+		bool isAlive();
 		void kill();
 
 		template<typename T> T& setComponent(T component);
@@ -163,6 +162,9 @@ namespace blueberry
 		template<typename T> T& getComponent();
 
 		template<typename T> bool hasComponent();
+
+		Entity& operator=(const Entity& other);
+		Entity& operator=(Entity&& other) noexcept;
 
 	};
 

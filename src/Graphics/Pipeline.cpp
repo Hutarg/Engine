@@ -1,6 +1,7 @@
 #include "Pipeline.h"
 
 #include "../Private/Structs.h"
+#include "../Private/Functions.h"
 
 namespace blueberry
 {
@@ -14,9 +15,10 @@ namespace blueberry
 		generation_ = -1;
 	}
 
-	Pipeline::Pipeline(TypeList<Shader>&& shaders)
+	Pipeline::Pipeline(TypeList<Shader>&& shaders, PipelineType type)
     {
 		Pipeline_T pipeline_T = {};
+		pipeline_T.type = type;
 
         TypeList<VkPipelineShaderStageCreateInfo> shaderStages = {};
 
@@ -141,6 +143,58 @@ namespace blueberry
 		if (vkCreateGraphicsPipelines(Application::logicalDevice_.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline_T.pipeline) != VK_SUCCESS)
 		{
 			throw - 1;
+		}
+
+		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			VkDescriptorBufferInfo bufferInfo{};
+			VkWriteDescriptorSet descriptorWrite{};
+
+			// Transform buffer
+
+			pipeline_T.frames[i].transformBufferSize = 1;
+			pipeline_T.frames[i].transformBuffer = createBuffer(Application::logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+			pipeline_T.frames[i].transformBufferMemory = createDeviceMemory(Application::physicalDevice_.device, Application::logicalDevice_.device, pipeline_T.frames[i].transformBuffer,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+			vkBindBufferMemory(Application::logicalDevice_.device, pipeline_T.frames[i].transformBuffer, pipeline_T.frames[i].transformBufferMemory, 0);
+
+			bufferInfo.offset = 0;
+			bufferInfo.buffer = pipeline_T.frames[i].transformBuffer;
+			bufferInfo.range = VK_WHOLE_SIZE;
+
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = Application::engine_.descriptorSets[i];
+			descriptorWrite.dstBinding = 1;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+
+			vkUpdateDescriptorSets(Application::logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
+
+			// Sprite buffer
+
+			pipeline_T.frames[i].spriteBufferSize = 1;
+			pipeline_T.frames[i].spriteBuffer = createBuffer(Application::logicalDevice_.device, 1, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+			pipeline_T.frames[i].spriteBufferMemory = createDeviceMemory(Application::physicalDevice_.device, Application::logicalDevice_.device, pipeline_T.frames[i].spriteBuffer,
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+			vkBindBufferMemory(Application::logicalDevice_.device, pipeline_T.frames[i].spriteBuffer, pipeline_T.frames[i].spriteBufferMemory, 0);
+
+			bufferInfo.offset = 0;
+			bufferInfo.buffer = pipeline_T.frames[i].spriteBuffer;
+			bufferInfo.range = VK_WHOLE_SIZE;
+
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = Application::engine_.descriptorSets[i];
+			descriptorWrite.dstBinding = 2;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.pBufferInfo = &bufferInfo;
+
+			vkUpdateDescriptorSets(Application::logicalDevice_.device, 1, &descriptorWrite, 0, nullptr);
 		}
 
 		if (freeIndices_.empty())

@@ -5,7 +5,7 @@
 
 #include "../Core/Application.h"
 
-bool operator==(const VkSurfaceFormatKHR& a, const VkSurfaceFormatKHR& b)
+static bool operator==(const VkSurfaceFormatKHR& a, const VkSurfaceFormatKHR& b)
 {
 	return a.format == b.format and a.colorSpace == b.colorSpace;
 }
@@ -17,6 +17,12 @@ namespace blueberry
 	TypeList<Window::Window_T> Window::windows_ = {};
 
 	Window::WindowInfos_T Window::windowInfos_ = {};
+
+	Window::Window()
+	{
+		index_ = -1;
+		generation_ = -1;
+	}
 
 	Window::Window(const char* title, uint32_t width, uint32_t height)
 	{
@@ -371,5 +377,10 @@ namespace blueberry
 		int width, height;
 		glfwGetWindowSize(windows_[index_].window, &width, &height);
 		return Vector2(width, height);
+	}
+
+	void Window::setClearColor(float r, float g, float b, float a) const
+	{
+		windows_[index_].clearColor = { {{r, g, b, a}}};
 	}
 }

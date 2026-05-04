@@ -51,10 +51,19 @@ namespace blueberry
 		VkQueue graphicsQueue;
 	};
 
+	struct EngineFrame
+	{
+		TypeList<VkCommandBuffer> commandBuffers = {};
+		VkFence inFlightFence;
+
+		VkBuffer uniformBuffer;
+		VkDeviceMemory uniformBufferMemory;
+		void* uniformBufferMap;
+	};
+
 	struct Application::Engine_T
 	{
 		VkCommandPool commandPool;
-		TypeList<VkCommandBuffer> commandBuffers;
 
 		VkDescriptorSetLayout descriptorSetLayout;
 		VkDescriptorPool descriptorPool;
@@ -74,22 +83,7 @@ namespace blueberry
 		VkBuffer indexBuffer;
 		VkDeviceMemory indexBufferMemory;
 
-		TypeList<VkBuffer> transformBuffers;
-		TypeList<VkDeviceMemory> transformBufferMemories;
-		TypeList<size_t> transformBufferSizes;
-
-		TypeList<VkBuffer> spriteBuffers;
-		TypeList<VkDeviceMemory> spriteBufferMemories;
-		TypeList<size_t> spriteBufferSizes;
-
-		TypeList<VkBuffer> uniformBuffers;
-		TypeList<VkDeviceMemory> uniformBufferMemories;
-		TypeList<void*> uniformBufferMaps;
-
-		TypeList<VkFence> inFlightFences;
-
-		Texture defaultTexture;
-		Pipeline defaultUiPipeline;
+		TypeList<EngineFrame> frames;
 	};
 
 	struct Window::Window_T
@@ -108,6 +102,7 @@ namespace blueberry
 		TypeList<VkSemaphore> renderFinishedSemaphores;
 
 		bool isResized = false;
+		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 0.0f}} };
 	};
 
 	struct Window::WindowInfos_T
@@ -117,10 +112,25 @@ namespace blueberry
 		VkRenderPass renderPass;
 	};
 
+	struct PipelineFrame
+	{
+		VkBuffer transformBuffer;
+		VkDeviceMemory transformBufferMemory;
+		size_t transformBufferSize;
+
+		VkBuffer spriteBuffer;
+		VkDeviceMemory spriteBufferMemory;
+		size_t spriteBufferSize;
+	};
+
 	struct Pipeline::Pipeline_T
 	{
 		VkPipelineLayout pipelineLayout;
 		VkPipeline pipeline;
+
+		PipelineType type;
+
+		TypeList<PipelineFrame> frames;
 	};
 
 	struct Shader::Shader_T

@@ -148,7 +148,7 @@ namespace blueberry
 		}
 	}
 
-	template<typename T> inline TypeList<T>::TypeList(const TypeList& other)
+	template<typename T> inline TypeList<T>::TypeList(const TypeList<T>& other)
 	{
 		size_ = other.size_;
 		capacity_ = other.capacity_;
@@ -160,7 +160,7 @@ namespace blueberry
 		}
 	}
 
-	template<typename T> inline TypeList<T>::TypeList(TypeList&& other) noexcept
+	template<typename T> inline TypeList<T>::TypeList(TypeList<T>&& other) noexcept
 	{
 		pdata_ = other.pdata_;
 		size_ = other.size_;

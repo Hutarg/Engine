@@ -6,6 +6,12 @@
 
 namespace blueberry
 {
+	enum PipelineType
+	{
+		SPRITE,
+		GUI
+	};
+
 	class BLUEBERRY_API Pipeline
 	{
 	private:
@@ -26,7 +32,7 @@ namespace blueberry
 	public:
 
 		Pipeline();
-		Pipeline(TypeList<Shader>&& shaders);
+		Pipeline(TypeList<Shader>&& shaders, PipelineType type);
 
 	};
 }
