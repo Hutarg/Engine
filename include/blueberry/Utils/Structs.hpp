@@ -1,15 +1,15 @@
 #pragma once
 
-#include "../Core/Application.h"
+#include "Core/Application.hpp"
 
-#include "../Graphics/Window.h"
-#include "../Graphics/Shader.h"
-#include "../Graphics/Texture.h"
-#include "../Graphics/Pipeline.h"
+#include "Graphics/Window.hpp"
+#include "Graphics/Shader.hpp"
+#include "Graphics/Texture.hpp"
+#include "Graphics/Pipeline.hpp"
 
-#include "../Graphics/UI/Widget2D.h"
-#include "../Graphics/UI/Panel2D.h"
-#include "../Graphics/UI/Button2D.h"
+#include "Graphics/UI/Widget2D.hpp"
+#include "Graphics/UI/Panel2D.hpp"
+#include "Graphics/UI/Button2D.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

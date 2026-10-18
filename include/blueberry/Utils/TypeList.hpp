@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../api.h"
+#include "Export.hpp"
 
-#include "../Maths/Functions.h"
+#include "Maths/Functions.hpp"
 
 #include <initializer_list>
 #include <vector>

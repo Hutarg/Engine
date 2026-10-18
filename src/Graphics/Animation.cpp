@@ -1,6 +1,6 @@
-#include "Animation.h"
+#include <Graphics/Animation.hpp>
 
-#include "../Private/Structs.h"
+#include <Utils/Structs.hpp>
 
 namespace blueberry
 {

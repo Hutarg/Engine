@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <initializer_list>
 
-#include "Functions.h"
+#include "Functions.hpp"
 
 namespace blueberry
 {

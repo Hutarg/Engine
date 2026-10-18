@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../api.h"
+#include "Export.hpp"
 
 #include <cstring>
 
@@ -36,8 +36,8 @@ namespace blueberry
 		size_t size = strlen(str1) + str2.getSize() + 1;
 		char* result = new char[size];
 
-		strcpy_s(result, size, str1);
-		strcat_s(result, size, str2.str());
+		std::strcpy(result, str1);
+		std::strcat(result, str2.str());
 
 		return String(result);
 	}
@@ -109,8 +109,8 @@ namespace blueberry
 		size_t size = size_ + strlen(str) + 1;
 		char* result = new char[size];
 
-		strcpy_s(result, size, data_);
-		strcat_s(result, size, str);
+		std::strcpy(result, data_);
+		std::strcat(result, str);
 
 		return String(result);
 	}

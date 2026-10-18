@@ -1,6 +1,6 @@
-#include "Button2D.h"
+#include <Graphics/UI/Button2D.hpp>
 
-#include "../../Private/Structs.h"
+#include <Utils/Structs.hpp>
 
 namespace blueberry
 {

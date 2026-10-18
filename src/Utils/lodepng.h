@@ -577,7 +577,7 @@ typedef struct LodePNGInfo {
 
     LodePNG does not apply any color conversions on pixels in the encoder or decoder and does not interpret these color
     profile values. It merely passes on the information. If you wish to use color profiles and convert colors, a separate
-    color management library should be used. There is also a limited library for this in lodepng_util.h.
+    color management library should be used. There is also a limited library for this in lodepng_util.hpp.
 
     There are 4 types of (sets of) chunks providing color information. If multiple are present, each will be decoded by
     LodePNG, but only one should be handled by the user, with the following order of priority depending on what the user
@@ -1325,9 +1325,9 @@ The specifications used are:
 *) Portable Network Graphics (PNG) Specification (Second Edition):
      http://www.w3.org/TR/2003/REC-PNG-20031110
 *) RFC 1950 ZLIB Compressed Data Format version 3.3:
-     http://www.gzip.org/zlib/rfc-zlib.html
+     http://www.gzip.org/zlib/rfc-zlib.hpptml
 *) RFC 1951 DEFLATE Compressed Data Format Specification ver 1.3:
-     http://www.gzip.org/zlib/rfc-deflate.html
+     http://www.gzip.org/zlib/rfc-deflate.hpptml
 
 The most recent version of LodePNG can currently be found at
 http://lodev.org/lodepng/
@@ -1336,7 +1336,7 @@ LodePNG works both in C (ISO C90) and C++, with a C++ wrapper that adds
 extra functionality.
 
 LodePNG exists out of two files:
--lodepng.h: the header file for both C and C++
+-lodepng.hpp: the header file for both C and C++
 -lodepng.c(pp): give it the name lodepng.c or lodepng.cpp (or .cc) depending on your usage
 
 If you want to start using LodePNG right away without reading this doc, get the
@@ -1841,8 +1841,8 @@ parameters there instead.
 
 No libraries other than the current standard C library are needed to compile
 LodePNG. For the C++ version, only the standard C++ library is needed on top.
-Add the files lodepng.c(pp) and lodepng.h to your project, include
-lodepng.h where needed, and your program can read/write PNG files.
+Add the files lodepng.c(pp) and lodepng.hpp to your project, include
+lodepng.hpp where needed, and your program can read/write PNG files.
 
 It is compatible with C90 and up, and C++03 and up.
 
@@ -1877,7 +1877,7 @@ with pragmas though: warning 4244 about implicit conversions, and warning 4996
 where it wants to use a non-standard function fopen_s instead of the standard C
 fopen.
 
-Visual Studio may want "stdafx.h" files to be included in each source file and
+Visual Studio may want "stdafx.hpp" files to be included in each source file and
 give an error "unexpected end of file while looking for precompiled header".
 This is not standard C++ and will not be added to the stock LodePNG. You can
 disable it for lodepng.cpp only by right clicking it, Properties, C/C++,
@@ -1909,7 +1909,7 @@ external method to handle such files and encode or decode in-memory
 10.1. decoder C++ example
 -------------------------
 
-#include "lodepng.h"
+#include "lodepng.hpp"
 #include <iostream>
 
 int main(int argc, char *argv[]) {
@@ -1929,7 +1929,7 @@ int main(int argc, char *argv[]) {
 10.2. decoder C example
 -----------------------
 
-#include "lodepng.h"
+#include "lodepng.hpp"
 
 int main(int argc, char *argv[]) {
   unsigned error;
@@ -2166,7 +2166,7 @@ https://github.com/lvandeve/lodepng
     needed, and performed some optimizations.
 *) 07 jun 2006: (!) Renamed functions to decodePNG and placed them
     in LodePNG namespace. Changed the order of the parameters. Rewrote the
-    documentation in the header. Renamed files to lodepng.cpp and lodepng.h
+    documentation in the header. Renamed files to lodepng.cpp and lodepng.hpp
 *) 22 apr 2006: Optimized and improved some code
 *) 07 sep 2005: (!) Changed to std::vector interface
 *) 12 aug 2005: Initial release (C++, decoder only)

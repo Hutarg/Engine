@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../api.h"
+#include "Export.hpp"
 
-#include "Shader.h"
+#include "Shader.hpp"
 
 namespace blueberry
 {

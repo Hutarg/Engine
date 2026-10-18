@@ -1,9 +1,10 @@
-#include "Entity.h"
+#include <Core/Entity.hpp>
 
 #include <chrono>
 
-#include "../Graphics/Animation.h"
-#include "../Private/Structs.h"
+#include <Graphics/Animation.hpp>
+
+#include <Utils/Structs.hpp>
 
 namespace blueberry
 {

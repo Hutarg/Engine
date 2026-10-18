@@ -1,6 +1,6 @@
-#include "File.h"
+#include <File/File.hpp>
 
-#include "../Private/lodepng.h"
+#include "../Utils/lodepng.h"
 
 #include <fstream>
 

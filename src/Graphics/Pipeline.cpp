@@ -1,7 +1,7 @@
-#include "Pipeline.h"
+#include <Graphics/Pipeline.hpp>
 
-#include "../Private/Structs.h"
-#include "../Private/Functions.h"
+#include <Utils/Structs.hpp>
+#include <Utils/Functions.hpp>
 
 namespace blueberry
 {
@@ -207,7 +207,7 @@ namespace blueberry
 		}
 		else
 		{
-			index_ = freeIndices_[-1]; // Prend le dernier élément pour remove en O(1)
+			index_ = freeIndices_[-1]; // Prend le dernier ï¿½lï¿½ment pour remove en O(1)
 			generation_ = generations_[index_];
 
 			freeIndices_.remove(-1);

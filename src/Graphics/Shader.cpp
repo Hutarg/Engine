@@ -1,10 +1,10 @@
-#include "Shader.h"
+#include <Graphics/Shader.hpp>
 
 #include <fstream>
 
-#include "../Private/Structs.h"
+#include <Utils/Structs.hpp>
 
-#include "../Utils/TypeList.h"
+#include <Utils/TypeList.hpp>
 
 namespace blueberry
 {
@@ -60,7 +60,7 @@ namespace blueberry
 		}
 		else
 		{
-			index_ = freeIndices_[-1]; // Prend le dernier élément pour remove en O(1)
+			index_ = freeIndices_[-1]; // Prend le dernier ï¿½lï¿½ment pour remove en O(1)
 			generation_ = generations_[index_];
 
 			freeIndices_.remove(-1);

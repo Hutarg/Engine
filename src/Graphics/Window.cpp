@@ -1,9 +1,9 @@
-#include "Window.h"
+#include <Graphics/Window.hpp>
 
-#include "../Private/Structs.h"
-#include "../Private/Functions.h"
+#include <Utils/Structs.hpp>
+#include <Utils/Functions.hpp>
 
-#include "../Core/Application.h"
+#include <Core/Application.hpp>
 
 static bool operator==(const VkSurfaceFormatKHR& a, const VkSurfaceFormatKHR& b)
 {
@@ -50,9 +50,9 @@ namespace blueberry
 
 		if (Application::physicalDevice_.device == VK_NULL_HANDLE)
 		{
-			// Crée les membres vulkan qui nécessitent une surface (fenêtre) pour être créer lors de la création de la première fenêtre
+			// Crï¿½e les membres vulkan qui nï¿½cessitent une surface (fenï¿½tre) pour ï¿½tre crï¿½er lors de la crï¿½ation de la premiï¿½re fenï¿½tre
 
-			// Choisis le premier gpu adapté (ils sont déjà rangés dans l'ordre du "meilleur" au "pire")
+			// Choisis le premier gpu adaptï¿½ (ils sont dï¿½jï¿½ rangï¿½s dans l'ordre du "meilleur" au "pire")
 
 			TypeList<Application::PhysicalDevice_T> physicalDevices = Application::getPhysicalDevices();
 
@@ -86,10 +86,10 @@ namespace blueberry
 
 			Application::createLogicalDevice();
 
-			// Cherche le meilleur format. Normalement un même format est supporté par toutes les fenêtres. Généraliser un format à toutes les fenêtres
-			// permet d'éviter d'utiliser une même pipeline pour chaque fenêtre et éviter de la dupliquer (ce qui peut être couteux)
+			// Cherche le meilleur format. Normalement un mï¿½me format est supportï¿½ par toutes les fenï¿½tres. Gï¿½nï¿½raliser un format ï¿½ toutes les fenï¿½tres
+			// permet d'ï¿½viter d'utiliser une mï¿½me pipeline pour chaque fenï¿½tre et ï¿½viter de la dupliquer (ce qui peut ï¿½tre couteux)
 
-			// Cherche le meilleur format (pt mettre une note en fonction des formats avec un tableau où l'index est le format et tableau[index] est la note du format)
+			// Cherche le meilleur format (pt mettre une note en fonction des formats avec un tableau oï¿½ l'index est le format et tableau[index] est la note du format)
 			windowInfos_.format = availableFormats[0];
 			for (const VkSurfaceFormatKHR& availableFormat : availableFormats)
 			{
@@ -99,7 +99,7 @@ namespace blueberry
 				}
 			}
 
-			// Cherche le meilleur mode de présentation
+			// Cherche le meilleur mode de prï¿½sentation
 			windowInfos_.presentMode = VK_PRESENT_MODE_FIFO_KHR;
 			for (const auto& availablePresentMode : availablePresentModes)
 			{
@@ -176,8 +176,8 @@ namespace blueberry
 			vkGetPhysicalDeviceSurfacePresentModesKHR(Application::physicalDevice_.device, window_T.surface, &presentModeCount, availablePresentModes.data());
 		}
 
-		// Si une fenêtre ne supporte pas le même format ou mode de présentation, on ne peut pas utiliser de pipeline
-		// A changer dans le futur pour que ca ne résulte plus en une erreur mais de toute façon il vaut mieux éviter plusieurs fenêtres
+		// Si une fenï¿½tre ne supporte pas le mï¿½me format ou mode de prï¿½sentation, on ne peut pas utiliser de pipeline
+		// A changer dans le futur pour que ca ne rï¿½sulte plus en une erreur mais de toute faï¿½on il vaut mieux ï¿½viter plusieurs fenï¿½tres
 		if (!availableFormats.contains(windowInfos_.format) or !availablePresentModes.contains(windowInfos_.presentMode))
 		{
 			throw - 1;
@@ -208,7 +208,7 @@ namespace blueberry
 			imageCount = window_T.capabilities.maxImageCount;
 		}
 
-		// Crée la swapchain
+		// Crï¿½e la swapchain
 		VkSwapchainCreateInfoKHR swapchainCreateInfo{};
 		swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		swapchainCreateInfo.surface = window_T.surface;
@@ -238,7 +238,7 @@ namespace blueberry
 			throw - 1;
 		}
 
-		// Récupère les images de la swapchain
+		// Rï¿½cupï¿½re les images de la swapchain
 		vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window_T.swapchain, &imageCount, nullptr);
 
 		window_T.images = TypeList<VkImage>(imageCount);
@@ -246,7 +246,7 @@ namespace blueberry
 
 		window_T.imageViews = TypeList<VkImageView>(imageCount);
 
-		// Crée les images views
+		// Crï¿½e les images views
 		VkImageViewCreateInfo imageViewCreateInfo{};
 		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -318,7 +318,7 @@ namespace blueberry
 		}
 		else
 		{
-			index_ = freeIndices_[-1]; // Prend le dernier élément pour remove en O(1)
+			index_ = freeIndices_[-1]; // Prend le dernier ï¿½lï¿½ment pour remove en O(1)
 			generation_ = generations_[index_];
 
 			freeIndices_.remove(-1);

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../api.h"
+#include "Export.hpp"
 
-#include "../Utils/String.h"
-#include "../Utils/Image.h"
-#include "../Utils/TypeList.h"
+#include "Utils/String.hpp"
+#include "Utils/Image.hpp"
+#include "Utils/TypeList.hpp"
 
 namespace blueberry
 {

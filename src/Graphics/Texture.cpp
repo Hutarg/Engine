@@ -1,9 +1,9 @@
-#include "Texture.h"
+#include <Graphics/Texture.hpp>
 
-#include "../Core/Application.h"
+#include <Core/Application.hpp>
 
-#include "../Private/Functions.h"
-#include "../Private/Structs.h"
+#include <Utils/Functions.hpp>
+#include <Utils/Structs.hpp>
 
 namespace blueberry
 {
@@ -74,7 +74,7 @@ namespace blueberry
 
 		vkBindImageMemory(Application::logicalDevice_.device, texture_T.image, texture_T.imageMemory, 0);
 
-		// Agrandit si nécessaire le buffer de staging
+		// Agrandit si nï¿½cessaire le buffer de staging
 
 		int pixelsSize = image.getWidth() * image.getHeight() * 4;
 

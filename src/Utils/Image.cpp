@@ -1,6 +1,6 @@
-#include "Image.h"
+#include <Utils/Image.hpp>
 
-#include "../Private/lodepng.h"
+#include "lodepng.h"
 
 namespace blueberry
 {

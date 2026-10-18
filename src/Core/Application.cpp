@@ -1,19 +1,19 @@
-#include "Application.h"
+#include <Core/Application.hpp>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <chrono>
 
-#include "Entity.h"
+#include <Core/Entity.hpp>
 
-#include "../Private/Structs.h"
-#include "../Private/Functions.h"
+#include <Utils/Structs.hpp>
+#include <Utils/Functions.hpp>
 
-#include "../Graphics/Window.h"
-#include "../Graphics/Pipeline.h"
+#include <Graphics/Window.hpp>
+#include <Graphics/Pipeline.hpp>
 
-#include "../Utils/TypeList.h"
+#include <Utils/TypeList.hpp>
 
 #ifndef BLUEBERRY_ENABLE_VALIDATION_LAYERS
 #ifdef NDEBUG 
@@ -43,7 +43,7 @@ namespace blueberry
 	bool Application::isRunning_ = false;
 	uint32_t Application::currentFrame_ = 0;
 
-	// Crée l'instance et le debug messenger
+	// CrÃ©e l'instance et le debug messenger
 	void Application::createInstance(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion)
 	{
 		// infos de l'app et du moteur
@@ -60,7 +60,7 @@ namespace blueberry
 		instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instanceCreateInfo.pApplicationInfo = &applicationInfo;
 
-		// extensions nécessaire de glfw
+		// extensions nÃ©cessaire de glfw
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
@@ -70,7 +70,7 @@ namespace blueberry
 
 		if (BLUEBERRY_ENABLE_VALIDATION_LAYERS)
 		{
-			// Vérifie la disponibilité et ajoute les layers de validation
+			// VÃ©rifie la disponibilitÃ© et ajoute les layers de validation
 			uint32_t layerCount;
 			vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -95,7 +95,7 @@ namespace blueberry
 				}
 			}
 
-			// Crée les infos du debug messenger maintenant pour que la création et destruction de l'instance puisse être debug
+			// Crï¿½e les infos du debug messenger maintenant pour que la crï¿½ation et destruction de l'instance puisse ï¿½tre debug
 			debugMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 			debugMessengerCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT 
 				| VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT 
@@ -125,7 +125,7 @@ namespace blueberry
 			throw - 1;
 		}
 
-		// Crée le debug messenger
+		// Crï¿½e le debug messenger
 		if (BLUEBERRY_ENABLE_VALIDATION_LAYERS)
 		{
 			auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_.instance, "vkCreateDebugUtilsMessengerEXT");
@@ -148,9 +148,9 @@ namespace blueberry
 	}
 
 	/// <summary>
-	/// Retourne les gpus qui peuvent être utilisé de manière que les "meilleurs" soit devant
+	/// Retourne les gpus qui peuvent ï¿½tre utilisï¿½ de maniï¿½re que les "meilleurs" soit devant
 	/// Ne prend pas directement le meilleur pcq'il faut checker si le gpu supporte les swap chains
-	/// Qui ne peuvent être checker que avec la création d'une fenêtre.
+	/// Qui ne peuvent ï¿½tre checker que avec la crï¿½ation d'une fenï¿½tre.
 	/// </summary>
 	TypeList<Application::PhysicalDevice_T> Application::getPhysicalDevices()
 	{
@@ -167,7 +167,7 @@ namespace blueberry
 
 		for (VkPhysicalDevice physicalDevice : physicalDevices)
 		{
-			// Teste si le composant est adapté (peut-être rajouter des tests)
+			// Teste si le composant est adaptï¿½ (peut-ï¿½tre rajouter des tests)
 			bool suitable = true;
 
 			VkPhysicalDeviceProperties deviceProperties;
@@ -189,7 +189,7 @@ namespace blueberry
 			if (!deviceFeatures.multiViewport) suitable = false;
 			if (!deviceFeatures.geometryShader) suitable = false;
 
-			// Check si le composant possède les queues nécessaire à l'affichage
+			// Check si le composant possï¿½de les queues nï¿½cessaire ï¿½ l'affichage
 			uint32_t queueFamilyCount = 0;
 			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
 
@@ -264,7 +264,7 @@ namespace blueberry
 
 			if (bindlessSupported) score += 1000;
 
-			// Range le gpu (il y a des meilleurs moyens mais c très pas grave, il y a pas 10 000 gpu sur un ordi)
+			// Range le gpu (il y a des meilleurs moyens mais c trï¿½s pas grave, il y a pas 10 000 gpu sur un ordi)
 			PhysicalDevice_T physicalDevice_T = {};
 			physicalDevice_T.device = physicalDevice;
 			physicalDevice_T.presentQueueIndex = presentQueueIndex;
@@ -301,7 +301,7 @@ namespace blueberry
 	}
 
 	/// <summary>
-	/// Crée le lien au gpu choisis par choosePhysicalDevice
+	/// Crï¿½e le lien au gpu choisis par choosePhysicalDevice
 	/// </summary>
 	void Application::createLogicalDevice()
 	{
@@ -626,7 +626,7 @@ namespace blueberry
 		{
 			glfwSwapBuffers(window.window);
 
-			// modifie les composants vulkan de la fenêtre si sa taille a été modifiée
+			// modifie les composants vulkan de la fenï¿½tre si sa taille a ï¿½tï¿½ modifiï¿½e
 
 			if (window.isResized)
 			{
@@ -634,7 +634,7 @@ namespace blueberry
 
 				for (VkFramebuffer framebuffer : window.framebuffers) vkDestroyFramebuffer(Application::logicalDevice_.device, framebuffer, nullptr);
 				for (VkImageView imageView : window.imageViews) vkDestroyImageView(Application::logicalDevice_.device, imageView, nullptr);
-				// Les images sont détruites automatiquement avec la swapchain donc pas de for image
+				// Les images sont dï¿½truites automatiquement avec la swapchain donc pas de for image
 				vkDestroySwapchainKHR(Application::logicalDevice_.device, window.swapchain, nullptr);
 
 				if (window.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
@@ -686,7 +686,7 @@ namespace blueberry
 					throw - 1;
 				}
 
-				// Récupère les images de la swapchain
+				// Rï¿½cupï¿½re les images de la swapchain
 				uint32_t imageCount = 0;
 				vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window.swapchain, &imageCount, nullptr);
 
@@ -695,7 +695,7 @@ namespace blueberry
 
 				window.imageViews = TypeList<VkImageView>(imageCount);
 
-				// Crée les images views
+				// Crï¿½e les images views
 				VkImageViewCreateInfo imageViewCreateInfo{};
 				imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 				imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -769,7 +769,7 @@ namespace blueberry
 
 	void Application::draw()
 	{
-		// Tri des données
+		// Tri des donnï¿½es
 
 		TypeList<TypeList<uint32_t>> textures;
 		TypeList<TypeList<Transform>> transforms;
@@ -790,7 +790,7 @@ namespace blueberry
 		size_t spriteBufferSize = Entity::getComponentPool<Sprite>().components.size() * sizeof(Sprite);
 		size_t stagingBufferSize = max(transformBufferSize, spriteBufferSize);
 
-		// Modification de la taille des buffers si nécessaire
+		// Modification de la taille des buffers si nï¿½cessaire
 
 		if (stagingBufferSize > engine_.stagingBufferSize)
 		{
@@ -848,7 +848,7 @@ namespace blueberry
 
 		// Allocation des command buffers
 
-		if (engine_.frames[currentFrame_].commandBuffers.size() < Window::windows_.size()) // augmente le nombre de command buffer si nécessaire afin de submit les draw call en même temps
+		if (engine_.frames[currentFrame_].commandBuffers.size() < Window::windows_.size()) // augmente le nombre de command buffer si nï¿½cessaire afin de submit les draw call en mï¿½me temps
 		{
 			int commandBufferSize = engine_.frames[currentFrame_].commandBuffers.size();
 			engine_.frames[currentFrame_].commandBuffers.resize(Window::windows_.size());
@@ -1075,7 +1075,7 @@ namespace blueberry
         if (isRunning_) return;
 
         isRunning_ = true; 
-		std::chrono::steady_clock::time_point lastTime = std::chrono::high_resolution_clock::now();
+		std::chrono::steady_clock::time_point lastTime = std::chrono::steady_clock::now();
 
 		applicationListener->create();
 
@@ -1088,7 +1088,7 @@ namespace blueberry
 			}
 
 			// Calcul du dt
-			std::chrono::steady_clock::time_point currentTime = std::chrono::high_resolution_clock::now();
+			std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
 			double dt = ((std::chrono::duration<double>)(currentTime - lastTime)).count();
 			lastTime = currentTime;
 

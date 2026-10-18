@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../api.h"
+#include "Export.hpp"
 
-#include "../Utils/TypeList.h"
+#include "Utils/TypeList.hpp"
 
 namespace blueberry
 {

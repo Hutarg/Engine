@@ -35,7 +35,7 @@ Pour utiliser ce moteur, il vous faudra :
 - Un compilateur compatible
 
 ### Dépendances externes :
- - [glfw](https://www.glfw.org/documentation.html) (gestion des fenêtres)
+ - [glfw](https://www.glfw.org/documentation.hpptml) (gestion des fenêtres)
  - [vulkan](https://www.vulkan.org) (rendu graphique)
  - [glm](https://www.opengl.org/sdk/libs/GLM/) (maths)
  - [lodepng](https://github.com/lvandeve/lodepng) (lecture de fichiers .png)
@@ -65,7 +65,7 @@ cmake ..
 ## Utilisation
 
 ```c++
-#include <blueberry.h>
+#include <blueberry.hpp>
 
 using namespace blueberry;
 

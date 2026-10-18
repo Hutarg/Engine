@@ -1,27 +1,30 @@
 #pragma once
 
-#include "../api.h"
+#include <Export.hpp>
 
 #include <vector>
 #include <iostream>
 #include <typeindex>
 #include <type_traits>
 
-#include "../Graphics/Window.h"
+#include "Graphics/Window.hpp"
+#include "Graphics/Animation.hpp"
 
-#include "../Maths/Vector.h"
-#include "../Maths/Matrix.h"
+#include "Maths/Vector.hpp"
+#include "Maths/Matrix.hpp"
 
-#include "../Utils/TypeList.h"
-#include "../Utils/Map.h"
+#include "Utils/TypeList.hpp"
+#include "Utils/Map.hpp"
 
 namespace blueberry
 {
 	class Entity;
 	class Texture;
 	class Animation;
+	class Pipeline;
 
-	class BLUEBERRY_API alignas(16) Transform
+	class BLUEBERRY_API Transform;
+	class alignas(16) Transform
 	{
 	private:
 
@@ -35,9 +38,9 @@ namespace blueberry
 
 		Transform(float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz)
 		{
-			position = { x, y, z, 0 };
-			rotation = { rx, ry, rz, 0 };
-			scale = { sx, sy, sz, 0 };
+			this->position = { x, y, z, 0 };
+			this->rotation = { rx, ry, rz, 0 };
+			this->scale = { sx, sy, sz, 0 };
 		}
 
 		Transform(Vector3 position, Vector3 rotation, Vector3 scale)
@@ -63,7 +66,8 @@ namespace blueberry
 		}
 	};
 
-	class alignas(16) BLUEBERRY_API Sprite
+	class BLUEBERRY_API Sprite;
+	class alignas(16) Sprite
 	{
 	private:
 

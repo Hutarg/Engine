@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../api.h"
+#include "Export.hpp"
 
-#include "../File/File.h"
-#include "../Utils/Image.h"
+#include "File/File.hpp"
+#include "Utils/Image.hpp"
 
 namespace blueberry
 {

@@ -1,4 +1,4 @@
-#include "Widget2D.h"
+#include <Graphics/UI/Widget2D.hpp>
 
 namespace blueberry
 {

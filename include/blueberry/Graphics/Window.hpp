@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../api.h"
+#include "Export.hpp"
 
 #include <cstdint>
 
-#include "../Maths/Vector.h"
-#include "../Utils/TypeList.h"
+#include "Maths/Vector.hpp"
+#include "Utils/TypeList.hpp"
 
 namespace blueberry
 {

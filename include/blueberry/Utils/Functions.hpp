@@ -1,15 +1,15 @@
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
 
-#include "Structs.h"
+#include "Structs.hpp"
 
 #include <iostream>
 
 namespace blueberry
 {
-	class Functions // permet d'éviter d'exposer les bibliothèques et d'avoir tout de même accès aux membres des classes du moteur
+	class Functions // permet d'ï¿½viter d'exposer les bibliothï¿½ques et d'avoir tout de mï¿½me accï¿½s aux membres des classes du moteur
 	{
 	public:
 
@@ -45,6 +45,8 @@ namespace blueberry
 				return i;
 			}
 		}
+
+		return -1;
 	}
 
 	static VkBuffer createBuffer(VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage)

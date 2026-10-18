@@ -1,6 +1,6 @@
-#include "Panel2D.h"
+#include <Graphics/UI/Panel2D.hpp>
 
-#include "../../Private/Structs.h"
+#include <Utils/Structs.hpp>
 
 namespace blueberry
 {
