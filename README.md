@@ -8,8 +8,6 @@
 ## Table des Matières
 
 - [À propos](#à-propos)
-- [Caractéristiques](#caractéristiques)
-- [Prérequis](#prérequis)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
 - [Wiki](#wiki)
@@ -18,48 +16,23 @@
 
 Ce projet est une libraire développé en C++ conçu pour la création de jeux vidéos.
 
-## Caractéristiques
-
-- ✅ **Rendu graphique** - Mise en place du GUI en cours
-- ❌ **Système de physique**
-- ❌ **Gestion des ressources**
-- ❌ **Support multi-plateforme**
-- ❌ **Système d'événements**
-
-
-## Prérequis
-
-Pour utiliser ce moteur, il vous faudra :
-- **C++ 17** ou supérieur
-- **Cmake 3.16** ou supérieur
-- Un compilateur compatible
-
 ### Dépendances externes :
  - [glfw](https://www.glfw.org/documentation.hpptml) (gestion des fenêtres)
  - [vulkan](https://www.vulkan.org) (rendu graphique)
  - [glm](https://www.opengl.org/sdk/libs/GLM/) (maths)
- - [lodepng](https://github.com/lvandeve/lodepng) (lecture de fichiers .png)
 
 ## Installation
 
-### 1. Cloner le repository
+### 1. Clonage du répertoire
 
 ```bash
 git clone https://github.com/Hutarg/Engine.git
-cd Engine
 ```
 
-### 2. Créer le répertoire de compilation
+### 2. Compilation
 
 ```bash
-mkdir build
-cd build
-```
-
-### 3. Configurer et compiler
-
-```bash
-cmake ..
+cmake -S Engine . -B build -G Ninja
 ```
 
 ## Utilisation
@@ -73,7 +46,7 @@ class AppListener : public ApplicationListener
 {
 public:
 
-	Game() = default;
+	AppListener() = default;
 
 	void create() override
 	{
