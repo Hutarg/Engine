@@ -6,7 +6,7 @@ namespace blueberry
 {
 	Animation::Animation() : Texture() {}
 
-	Animation::Animation(File textureFile, TypeList<Vector4> uvs, float frameDuration)
+	Animation::Animation(File textureFile, Shrub<Vector4> uvs, float frameDuration)
 	{
 		Image image = textureFile.decode();
 		create(image);
@@ -35,7 +35,7 @@ namespace blueberry
 			};
 	}
 
-	Animation::Animation(File textureFile, TypeList<Vector4> uvs, int(*getFrame)(float dt))
+	Animation::Animation(File textureFile, Shrub<Vector4> uvs, int(*getFrame)(float dt))
 	{
 		Image image = textureFile.decode();
 		create(image);

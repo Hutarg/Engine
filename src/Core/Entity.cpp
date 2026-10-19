@@ -11,8 +11,8 @@ namespace blueberry
 	Map<std::type_index, void*> Entity::componentPools = {};
 	Map<std::type_index, Entity::ComponentPool<Script*>> Entity::scriptPools = {};
 
-	TypeList<uint32_t> Entity::freeIndices_ = {};
-	TypeList<uint32_t> Entity::generations_ = {};
+	Shrub<uint32_t> Entity::freeIndices_ = {};
+	Shrub<uint32_t> Entity::generations_ = {};
 
 	Sprite::Sprite(Window window, Pipeline pipeline)
 	{

@@ -2,8 +2,8 @@
 
 namespace blueberry
 {
-	TypeList<uint32_t> Widget2D::freeIndices_ = {};
-	TypeList<uint32_t> Widget2D::generations_ = {};
+	Shrub<uint32_t> Widget2D::freeIndices_ = {};
+	Shrub<uint32_t> Widget2D::generations_ = {};
 
 	Widget2D::Widget2D(Widget2D* widget_T)
 	{

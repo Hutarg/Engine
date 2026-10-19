@@ -13,7 +13,7 @@
 #include "Maths/Vector.hpp"
 #include "Maths/Matrix.hpp"
 
-#include "Utils/TypeList.hpp"
+#include "Utils/Shrub.hpp"
 #include "Utils/Map.hpp"
 
 namespace blueberry
@@ -119,9 +119,9 @@ namespace blueberry
 
 		template<typename T> struct ComponentPool
 		{
-			TypeList<T> components;
-			TypeList<uint32_t> entitiesIndices;			// entitiesIndices[componentIndex] -> EntityIndex
-			TypeList<uint32_t> componentsIndices;		// componentsIndices[entityIndex] -> ComponentIndex
+			Shrub<T> components;
+			Shrub<uint32_t> entitiesIndices;			// entitiesIndices[componentIndex] -> EntityIndex
+			Shrub<uint32_t> componentsIndices;		// componentsIndices[entityIndex] -> ComponentIndex
 		};
 
 		template<typename T> static ComponentPool<T>& getComponentPool()
@@ -141,8 +141,8 @@ namespace blueberry
 		static Map<std::type_index, void*> componentPools;
 		static Map<std::type_index, ComponentPool<Script*>> scriptPools;
 
-		static TypeList<uint32_t> freeIndices_;
-		static TypeList<uint32_t> generations_;
+		static Shrub<uint32_t> freeIndices_;
+		static Shrub<uint32_t> generations_;
 
 		uint32_t index_;
 		uint32_t generation_;

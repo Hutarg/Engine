@@ -4,13 +4,13 @@
 
 #include <Utils/Structs.hpp>
 
-#include <Utils/TypeList.hpp>
+#include <Utils/Shrub.hpp>
 
 namespace blueberry
 {
-	TypeList<Shader::Shader_T> Shader::shaders_ = {};
-	TypeList<uint32_t> Shader::freeIndices_ = {};
-	TypeList<uint32_t> Shader::generations_ = {};
+	Shrub<Shader::Shader_T> Shader::shaders_ = {};
+	Shrub<uint32_t> Shader::freeIndices_ = {};
+	Shrub<uint32_t> Shader::generations_ = {};
 
 	Shader::Shader(const char* filename, ShaderType type, const char* stageName)
 	{
@@ -34,7 +34,7 @@ namespace blueberry
 		if (!file.is_open()) throw - 1;
 
 		size_t size = file.tellg();
-		TypeList<char> buffer(size);
+		Shrub<char> buffer(size);
 
 		file.seekg(0);
 		file.read(buffer.data(), size);

@@ -53,7 +53,7 @@ namespace blueberry
 
 	struct EngineFrame
 	{
-		TypeList<VkCommandBuffer> commandBuffers = {};
+		Shrub<VkCommandBuffer> commandBuffers = {};
 		VkFence inFlightFence;
 
 		VkBuffer uniformBuffer;
@@ -67,7 +67,7 @@ namespace blueberry
 
 		VkDescriptorSetLayout descriptorSetLayout;
 		VkDescriptorPool descriptorPool;
-		TypeList<VkDescriptorSet> descriptorSets;
+		Shrub<VkDescriptorSet> descriptorSets;
 
 		VkDescriptorSetLayout bindlessDescriptorSetLayout;
 		VkDescriptorPool bindlessDescriptorPool;
@@ -83,7 +83,7 @@ namespace blueberry
 		VkBuffer indexBuffer;
 		VkDeviceMemory indexBufferMemory;
 
-		TypeList<EngineFrame> frames;
+		Shrub<EngineFrame> frames;
 	};
 
 	struct Window::Window_T
@@ -94,12 +94,12 @@ namespace blueberry
 		VkSurfaceCapabilitiesKHR capabilities;
 		VkExtent2D extent;
 		VkSwapchainKHR swapchain;
-		TypeList<VkImage> images;
-		TypeList<VkImageView> imageViews;
-		TypeList<VkFramebuffer> framebuffers;
+		Shrub<VkImage> images;
+		Shrub<VkImageView> imageViews;
+		Shrub<VkFramebuffer> framebuffers;
 
-		TypeList<VkSemaphore> imageAvailableSemaphores;
-		TypeList<VkSemaphore> renderFinishedSemaphores;
+		Shrub<VkSemaphore> imageAvailableSemaphores;
+		Shrub<VkSemaphore> renderFinishedSemaphores;
 
 		bool isResized = false;
 		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 0.0f}} };
@@ -130,7 +130,7 @@ namespace blueberry
 
 		PipelineType type;
 
-		TypeList<PipelineFrame> frames;
+		Shrub<PipelineFrame> frames;
 	};
 
 	struct Shader::Shader_T

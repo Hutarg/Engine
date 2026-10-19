@@ -43,7 +43,7 @@ namespace blueberry
 		std::vector<unsigned char> pixels;
 		if (lodepng::decode(pixels, width, height, filename_)) throw - 1;
 
-		return Image(width, height, TypeList(pixels));
+		return Image(width, height, Shrub(pixels));
 	}
 
 	void File::encode(Image image)

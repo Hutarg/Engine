@@ -2,7 +2,7 @@
 
 #include <initializer_list>
 
-#include "TypeList.hpp"
+#include "Shrub.hpp"
 #include "Tuple.hpp"
 
 namespace blueberry
@@ -28,8 +28,8 @@ namespace blueberry
 		void add(Key key, Value value);
 		void remove(Key key);
 
-		TypeList<Key> getKeys();
-		TypeList<Value> getValues();
+		Shrub<Key> getKeys();
+		Shrub<Value> getValues();
 
 		class Iterator
 		{
@@ -201,15 +201,15 @@ namespace blueberry
 	}
 
 	template <typename Key, typename Value>
-	inline TypeList<Key> Map<Key, Value>::getKeys()
+	inline Shrub<Key> Map<Key, Value>::getKeys()
 	{
-		return TypeList<Key>(pkeys_, size_);
+		return Shrub<Key>(pkeys_, size_);
 	}
 
 	template <typename Key, typename Value>
-	inline TypeList<Value> Map<Key, Value>::getValues()
+	inline Shrub<Value> Map<Key, Value>::getValues()
 	{
-		return TypeList<Value>(pvalues_, size_);
+		return Shrub<Value>(pvalues_, size_);
 	}
 
 	template <typename Key, typename Value>

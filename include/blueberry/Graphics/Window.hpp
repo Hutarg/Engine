@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "Maths/Vector.hpp"
-#include "Utils/TypeList.hpp"
+#include "Utils/Shrub.hpp"
 
 namespace blueberry
 {
@@ -16,9 +16,9 @@ namespace blueberry
 		struct Window_T;
 		struct WindowInfos_T;
 
-		static TypeList<Window_T> windows_;
-		static TypeList<uint32_t> freeIndices_;
-		static TypeList<uint32_t> generations_;
+		static Shrub<Window_T> windows_;
+		static Shrub<uint32_t> freeIndices_;
+		static Shrub<uint32_t> generations_;
 
 		static WindowInfos_T windowInfos_;
 

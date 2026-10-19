@@ -19,7 +19,7 @@ namespace blueberry
 		pixels_ = pixels;
 	}
 
-	Image::Image(int width, int height, TypeList<unsigned char> pixels)
+	Image::Image(int width, int height, Shrub<unsigned char> pixels)
 	{
 		width_ = width;
 		height_ = height;
@@ -29,7 +29,7 @@ namespace blueberry
 
 	void Image::setWidth(int width, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	{
-		TypeList<unsigned char> pixels = TypeList<unsigned char>(width * height_ * 4);
+		Shrub<unsigned char> pixels = Shrub<unsigned char>(width * height_ * 4);
 
 		int index = 0;
 		for (int y = 0; y < height_; y++)
@@ -61,7 +61,7 @@ namespace blueberry
 
 	void Image::setHeight(int height, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	{
-		TypeList<unsigned char> pixels = TypeList<unsigned char>(width_ * height * 4);
+		Shrub<unsigned char> pixels = Shrub<unsigned char>(width_ * height * 4);
 
 		int index = 0;
 		for (int y = 0; y < height; y++)
@@ -104,7 +104,7 @@ namespace blueberry
 
 	void Image::setSize(int width, int height, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	{
-		TypeList<unsigned char> pixels = TypeList<unsigned char>(width * height * 4);
+		Shrub<unsigned char> pixels = Shrub<unsigned char>(width * height * 4);
 
 		int index = 0;
 		for (int y = 0; y < height; y++)
@@ -160,14 +160,14 @@ namespace blueberry
 		}
 	}
 
-	TypeList<unsigned char> Image::getPixels() const
+	Shrub<unsigned char> Image::getPixels() const
 	{
 		return pixels_;
 	}
 
-	TypeList<unsigned char> Image::getPixels(int x, int y, int width, int height)
+	Shrub<unsigned char> Image::getPixels(int x, int y, int width, int height)
 	{
-		TypeList<unsigned char> pixels = TypeList<unsigned char>(width * height * 4);
+		Shrub<unsigned char> pixels = Shrub<unsigned char>(width * height * 4);
 
 		int index = 0;
 		for (; y < height; y++)
@@ -192,16 +192,16 @@ namespace blueberry
 		return Image(width, height, getPixels(x, y, width, height));
 	}
 
-	TypeList<Image> Image::split(int width, int height)
+	Shrub<Image> Image::split(int width, int height)
 	{
 		return split(0, 0, width, height, width, height);
 	}
 
-	TypeList<Image> Image::split(int x, int y, int width, int height, int splitWidth, int splitHeight)
+	Shrub<Image> Image::split(int x, int y, int width, int height, int splitWidth, int splitHeight)
 	{
 		int widthCount = (width_ - x) / splitWidth;
 		int heightCount = (height_ - y) / splitHeight;
-		TypeList<Image> Images = TypeList<Image>(widthCount * heightCount);
+		Shrub<Image> Images = Shrub<Image>(widthCount * heightCount);
 
 		int index = 0;
 		for (int h = 0; h < heightCount; h++)

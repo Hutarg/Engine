@@ -5,9 +5,9 @@
 
 namespace blueberry
 {
-	TypeList<uint32_t> Pipeline::freeIndices_ = {};
-	TypeList<uint32_t> Pipeline::generations_ = {};
-	TypeList<Pipeline::Pipeline_T> Pipeline::pipelines_ = {};
+	Shrub<uint32_t> Pipeline::freeIndices_ = {};
+	Shrub<uint32_t> Pipeline::generations_ = {};
+	Shrub<Pipeline::Pipeline_T> Pipeline::pipelines_ = {};
 
 	Pipeline::Pipeline()
 	{
@@ -15,12 +15,12 @@ namespace blueberry
 		generation_ = -1;
 	}
 
-	Pipeline::Pipeline(TypeList<Shader>&& shaders, PipelineType type)
+	Pipeline::Pipeline(Shrub<Shader>&& shaders, PipelineType type)
     {
 		Pipeline_T pipeline_T = {};
 		pipeline_T.type = type;
 
-        TypeList<VkPipelineShaderStageCreateInfo> shaderStages = {};
+        Shrub<VkPipelineShaderStageCreateInfo> shaderStages = {};
 
         for (const Shader& shader : shaders)
         {
@@ -33,7 +33,7 @@ namespace blueberry
             shaderStages.add(shaderStage);
         }
 
-		TypeList<VkDynamicState> dynamicStates = 
+		Shrub<VkDynamicState> dynamicStates = 
 		{
 			VK_DYNAMIC_STATE_VIEWPORT,
 			VK_DYNAMIC_STATE_SCISSOR
@@ -55,7 +55,7 @@ namespace blueberry
 		positionAttributeDescriptions.format = VK_FORMAT_R32G32B32_SFLOAT;
 		positionAttributeDescriptions.offset = offsetof(Vertex, pos);
 
-		TypeList<VkVertexInputAttributeDescription> attributeDescriptions = TypeList<VkVertexInputAttributeDescription>{ positionAttributeDescriptions };
+		Shrub<VkVertexInputAttributeDescription> attributeDescriptions = Shrub<VkVertexInputAttributeDescription>{ positionAttributeDescriptions };
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -113,7 +113,7 @@ namespace blueberry
 		viewportState.scissorCount = 1;
 		viewportState.pScissors = &scissor;
 
-		TypeList<VkDescriptorSetLayout> descriptorSetLayouts = { Application::engine_.descriptorSetLayout, Application::engine_.bindlessDescriptorSetLayout };
+		Shrub<VkDescriptorSetLayout> descriptorSetLayouts = { Application::engine_.descriptorSetLayout, Application::engine_.bindlessDescriptorSetLayout };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

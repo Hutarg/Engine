@@ -28,19 +28,15 @@ generate_export_header(Blueberry EXPORT_MACRO_NAME BLUEBERRY_API EXPORT_FILE_NAM
 
 target_link_libraries(Blueberry PRIVATE Vulkan::Vulkan glfw)
 
-target_include_directories(Blueberry
+target_include_directories(Blueberry 
     PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/blueberry"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/blueberry>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/blueberry>"
         "$<INSTALL_INTERFACE:include>"
         "$<INSTALL_INTERFACE:include/blueberry>"
-)
-
-target_include_directories(Blueberry
-    PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
 )
 
 # Installe les fichiers d'en-tête

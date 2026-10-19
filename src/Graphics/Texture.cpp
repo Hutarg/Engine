@@ -7,9 +7,9 @@
 
 namespace blueberry
 {
-	TypeList<Texture::Texture_T> Texture::textures_ = {};
-	TypeList<uint32_t> Texture::freeIndices_ = {};
-	TypeList<uint32_t> Texture::generations_ = {};
+	Shrub<Texture::Texture_T> Texture::textures_ = {};
+	Shrub<uint32_t> Texture::freeIndices_ = {};
+	Shrub<uint32_t> Texture::generations_ = {};
 
 	Texture::Texture()
 	{

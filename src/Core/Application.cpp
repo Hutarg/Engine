@@ -13,7 +13,7 @@
 #include <Graphics/Window.hpp>
 #include <Graphics/Pipeline.hpp>
 
-#include <Utils/TypeList.hpp>
+#include <Utils/Shrub.hpp>
 
 #ifndef BLUEBERRY_ENABLE_VALIDATION_LAYERS
 #ifdef NDEBUG 
@@ -23,12 +23,12 @@
 #endif
 #endif
 
-const blueberry::TypeList<const char*> validationLayers = 
+const blueberry::Shrub<const char*> validationLayers = 
 {
 	"VK_LAYER_KHRONOS_validation"
 };
 
-const blueberry::TypeList<const char*> deviceExtensions = 
+const blueberry::Shrub<const char*> deviceExtensions = 
 {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
@@ -64,7 +64,7 @@ namespace blueberry
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-		TypeList<const char*> extensions = TypeList<const char*>(glfwExtensions, glfwExtensionCount);
+		Shrub<const char*> extensions = Shrub<const char*>(glfwExtensions, glfwExtensionCount);
 
 		VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
 
@@ -152,18 +152,18 @@ namespace blueberry
 	/// Ne prend pas directement le meilleur pcq'il faut checker si le gpu supporte les swap chains
 	/// Qui ne peuvent �tre checker que avec la cr�ation d'une fen�tre.
 	/// </summary>
-	TypeList<Application::PhysicalDevice_T> Application::getPhysicalDevices()
+	Shrub<Application::PhysicalDevice_T> Application::getPhysicalDevices()
 	{
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance_.instance, &deviceCount, nullptr);
 
 		if (deviceCount == 0) throw - 1;
 
-		TypeList<VkPhysicalDevice> physicalDevices = TypeList<VkPhysicalDevice>(deviceCount);
+		Shrub<VkPhysicalDevice> physicalDevices = Shrub<VkPhysicalDevice>(deviceCount);
 		vkEnumeratePhysicalDevices(instance_.instance, &deviceCount, physicalDevices.data());
 
-		TypeList<uint32_t> scores = {};
-		TypeList<PhysicalDevice_T> sortedPhysicalDevices = {};
+		Shrub<uint32_t> scores = {};
+		Shrub<PhysicalDevice_T> sortedPhysicalDevices = {};
 
 		for (VkPhysicalDevice physicalDevice : physicalDevices)
 		{
@@ -193,7 +193,7 @@ namespace blueberry
 			uint32_t queueFamilyCount = 0;
 			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
 
-			TypeList<VkQueueFamilyProperties> queueFamiliesProperties = TypeList<VkQueueFamilyProperties>(queueFamilyCount);
+			Shrub<VkQueueFamilyProperties> queueFamiliesProperties = Shrub<VkQueueFamilyProperties>(queueFamilyCount);
 			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamiliesProperties.data());
 
 			int presentQueueIndex = -1;
@@ -222,7 +222,7 @@ namespace blueberry
 			uint32_t extensionCount;
 			vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr);
 
-			TypeList<VkExtensionProperties> availableExtensions(extensionCount);
+			Shrub<VkExtensionProperties> availableExtensions(extensionCount);
 			vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, availableExtensions.data());
 
 			for (const char* deviceExtension : deviceExtensions)
@@ -319,7 +319,7 @@ namespace blueberry
 		graphicsQueueCreateInfo.queueCount = 1;
 		graphicsQueueCreateInfo.pQueuePriorities = &priority;
 
-		TypeList<VkDeviceQueueCreateInfo> queueCreateInfos = { presentQueueCreateInfo, graphicsQueueCreateInfo };
+		Shrub<VkDeviceQueueCreateInfo> queueCreateInfos = { presentQueueCreateInfo, graphicsQueueCreateInfo };
 
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.geometryShader = VK_TRUE;
@@ -402,7 +402,7 @@ namespace blueberry
 		spriteLayoutBinding.descriptorCount = 1;
 		spriteLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		TypeList<VkDescriptorSetLayoutBinding> layoutBindings = { uboLayoutBinding, transformLayoutBinding, spriteLayoutBinding };
+		Shrub<VkDescriptorSetLayoutBinding> layoutBindings = { uboLayoutBinding, transformLayoutBinding, spriteLayoutBinding };
 
 		VkDescriptorSetLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -460,7 +460,7 @@ namespace blueberry
 		spritePoolSize.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		spritePoolSize.descriptorCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
-		TypeList<VkDescriptorPoolSize> poolSizes = { uboPoolSize, transformPoolSize, spritePoolSize };
+		Shrub<VkDescriptorPoolSize> poolSizes = { uboPoolSize, transformPoolSize, spritePoolSize };
 
 		VkDescriptorPoolCreateInfo descriptorPoolInfo{};
 		descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -489,7 +489,7 @@ namespace blueberry
 			throw - 1;
 		}
 
-		TypeList<VkDescriptorSetLayout> descriptorSetLayouts = { engine_.descriptorSetLayout, BLUEBERRY_MAX_FRAMES_IN_FLIGHT };
+		Shrub<VkDescriptorSetLayout> descriptorSetLayouts = { engine_.descriptorSetLayout, BLUEBERRY_MAX_FRAMES_IN_FLIGHT };
 
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
 		descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -497,13 +497,13 @@ namespace blueberry
 		descriptorSetAllocateInfo.descriptorSetCount = static_cast<uint32_t>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 		descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
-		engine_.descriptorSets = TypeList<VkDescriptorSet>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.descriptorSets = Shrub<VkDescriptorSet>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 		if (vkAllocateDescriptorSets(logicalDevice_.device, &descriptorSetAllocateInfo, engine_.descriptorSets.data()) != VK_SUCCESS)
 		{
 			throw - 1;
 		}
 
-		TypeList<VkDescriptorSetLayout> bindlessDescriptorSetLayouts = { engine_.bindlessDescriptorSetLayout, BLUEBERRY_MAX_FRAMES_IN_FLIGHT };
+		Shrub<VkDescriptorSetLayout> bindlessDescriptorSetLayouts = { engine_.bindlessDescriptorSetLayout, BLUEBERRY_MAX_FRAMES_IN_FLIGHT };
 
 		uint32_t counts = 100000;
 
@@ -524,14 +524,14 @@ namespace blueberry
 			throw - 1;
 		}
 
-		TypeList<Vertex> vertices = {
+		Shrub<Vertex> vertices = {
 			{ {-0.5f, -0.5f, 0.0f} },
 			{ { 0.5f, -0.5f, 0.0f} },
 			{ { 0.5f,  0.5f, 0.0f} },
 			{ {-0.5f,  0.5f, 0.0f} }
 		};
 
-		TypeList<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
+		Shrub<uint16_t> indices = { 0, 1, 2, 2, 3, 0 };
 
 		size_t vertexBufferSize = vertices.size() * sizeof(Vertex);
 		size_t indexBufferSize = indices.size() * sizeof(indices[0]);
@@ -569,7 +569,7 @@ namespace blueberry
 
 		copyBuffer(logicalDevice_.device, logicalDevice_.graphicsQueue, engine_.commandPool, engine_.stagingBuffer, engine_.indexBuffer, indexBufferSize);
 
-		engine_.frames = TypeList<EngineFrame>(EngineFrame(), BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		engine_.frames = Shrub<EngineFrame>(EngineFrame(), BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
 		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
 		{
@@ -690,10 +690,10 @@ namespace blueberry
 				uint32_t imageCount = 0;
 				vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window.swapchain, &imageCount, nullptr);
 
-				window.images = TypeList<VkImage>(imageCount);
+				window.images = Shrub<VkImage>(imageCount);
 				vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window.swapchain, &imageCount, window.images.data());
 
-				window.imageViews = TypeList<VkImageView>(imageCount);
+				window.imageViews = Shrub<VkImageView>(imageCount);
 
 				// Cr�e les images views
 				VkImageViewCreateInfo imageViewCreateInfo{};
@@ -720,7 +720,7 @@ namespace blueberry
 					}
 				}
 
-				window.framebuffers = TypeList<VkFramebuffer>(window.imageViews.size());
+				window.framebuffers = Shrub<VkFramebuffer>(window.imageViews.size());
 				for (size_t i = 0; i < window.imageViews.size(); i++)
 				{
 					VkFramebufferCreateInfo framebufferInfo{};
@@ -771,8 +771,8 @@ namespace blueberry
 	{
 		// Tri des donn�es
 
-		TypeList<TypeList<uint32_t>> textures;
-		TypeList<TypeList<Transform>> transforms;
+		Shrub<Shrub<uint32_t>> textures;
+		Shrub<Shrub<Transform>> transforms;
 
 		for (int i = 0; i < Entity::getComponentPool<Sprite>().components.size(); i++)
 		{
@@ -865,12 +865,12 @@ namespace blueberry
 			}
 		}
 
-		TypeList<uint32_t> imageIndices = TypeList<uint32_t>(Window::windows_.size());
-		TypeList<VkSwapchainKHR> swapchains = TypeList<VkSwapchainKHR>(Window::windows_.size());
-		TypeList<VkPipelineStageFlags> waitStages = TypeList<VkPipelineStageFlags>(Window::windows_.size());
+		Shrub<uint32_t> imageIndices = Shrub<uint32_t>(Window::windows_.size());
+		Shrub<VkSwapchainKHR> swapchains = Shrub<VkSwapchainKHR>(Window::windows_.size());
+		Shrub<VkPipelineStageFlags> waitStages = Shrub<VkPipelineStageFlags>(Window::windows_.size());
 
-		TypeList<VkSemaphore> imageAvailableSemaphores = TypeList<VkSemaphore>(Window::windows_.size());
-		TypeList<VkSemaphore> renderFinishedSemaphores = TypeList<VkSemaphore>(Window::windows_.size());
+		Shrub<VkSemaphore> imageAvailableSemaphores = Shrub<VkSemaphore>(Window::windows_.size());
+		Shrub<VkSemaphore> renderFinishedSemaphores = Shrub<VkSemaphore>(Window::windows_.size());
 
 		for (int i = 0; i < Window::windows_.size(); i++)
 		{
@@ -945,7 +945,7 @@ namespace blueberry
 					vkCmdBindVertexBuffers(commandBuffer, 0, 1, &engine_.vertexBuffer, &offsets);
 					vkCmdBindIndexBuffer(commandBuffer, engine_.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-					TypeList<VkDescriptorSet> descriptorSets = { engine_.descriptorSets[currentFrame_], engine_.bindlessDescriptorSet };
+					Shrub<VkDescriptorSet> descriptorSets = { engine_.descriptorSets[currentFrame_], engine_.bindlessDescriptorSet };
 					vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline::pipelines_[j].pipelineLayout, 0, descriptorSets.size(), descriptorSets.data(), 0, nullptr);
 					vkCmdDrawIndexed(commandBuffer, 6, Entity::getComponentPool<Sprite>().components.size(), 0, 0, 0);
 				}

@@ -2,7 +2,7 @@
 
 #include <Export.hpp>
 
-#include <Utils/TypeList.hpp>
+#include <Utils/Shrub.hpp>
 
 namespace blueberry
 {
@@ -36,7 +36,7 @@ namespace blueberry
 		static void createInstance(const char* appName, int appMajorVersion, int appMinorVersion, int appPatchVersion);
 		static void destroyInstance();
 
-		static TypeList<PhysicalDevice_T> getPhysicalDevices();
+		static Shrub<PhysicalDevice_T> getPhysicalDevices();
 
 		static void createLogicalDevice();
 		static void destroyLogicalDevice();

@@ -2,7 +2,7 @@
 
 #include "Export.hpp"
 
-#include "Utils/TypeList.hpp"
+#include "Utils/Shrub.hpp"
 
 namespace blueberry
 {
@@ -17,10 +17,10 @@ namespace blueberry
 	private:
 
 		struct Shader_T;
-		static TypeList<Shader_T> shaders_;
+		static Shrub<Shader_T> shaders_;
 
-		static TypeList<uint32_t> freeIndices_;
-		static TypeList<uint32_t> generations_;
+		static Shrub<uint32_t> freeIndices_;
+		static Shrub<uint32_t> generations_;
 
 		uint32_t index_ = -1;
 		uint32_t generation_ = -1;

@@ -12,9 +12,9 @@ static bool operator==(const VkSurfaceFormatKHR& a, const VkSurfaceFormatKHR& b)
 
 namespace blueberry
 {
-	TypeList<uint32_t> Window::freeIndices_ = {};
-	TypeList<uint32_t> Window::generations_ = {};
-	TypeList<Window::Window_T> Window::windows_ = {};
+	Shrub<uint32_t> Window::freeIndices_ = {};
+	Shrub<uint32_t> Window::generations_ = {};
+	Shrub<Window::Window_T> Window::windows_ = {};
 
 	Window::WindowInfos_T Window::windowInfos_ = {};
 
@@ -45,8 +45,8 @@ namespace blueberry
 			throw - 1;
 		}
 
-		TypeList<VkSurfaceFormatKHR> availableFormats;
-		TypeList<VkPresentModeKHR> availablePresentModes;
+		Shrub<VkSurfaceFormatKHR> availableFormats;
+		Shrub<VkPresentModeKHR> availablePresentModes;
 
 		if (Application::physicalDevice_.device == VK_NULL_HANDLE)
 		{
@@ -54,7 +54,7 @@ namespace blueberry
 
 			// Choisis le premier gpu adapt� (ils sont d�j� rang�s dans l'ordre du "meilleur" au "pire")
 
-			TypeList<Application::PhysicalDevice_T> physicalDevices = Application::getPhysicalDevices();
+			Shrub<Application::PhysicalDevice_T> physicalDevices = Application::getPhysicalDevices();
 
 			for (Application::PhysicalDevice_T physicalDevice : physicalDevices)
 			{
@@ -63,13 +63,13 @@ namespace blueberry
 				uint32_t formatCount;
 				vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice.device, window_T.surface, &formatCount, nullptr);
 
-				availableFormats = TypeList<VkSurfaceFormatKHR>(formatCount);
+				availableFormats = Shrub<VkSurfaceFormatKHR>(formatCount);
 				vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice.device, window_T.surface, &formatCount, availableFormats.data());
 
 				uint32_t presentModeCount;
 				vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice.device, window_T.surface, &presentModeCount, nullptr);
 
-				availablePresentModes = TypeList<VkPresentModeKHR>(presentModeCount);
+				availablePresentModes = Shrub<VkPresentModeKHR>(presentModeCount);
 				vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice.device, window_T.surface, &presentModeCount, availablePresentModes.data());
 
 				if (!availableFormats.empty() and !availablePresentModes.empty())
@@ -166,13 +166,13 @@ namespace blueberry
 			uint32_t formatCount;
 			vkGetPhysicalDeviceSurfaceFormatsKHR(Application::physicalDevice_.device, window_T.surface, &formatCount, nullptr);
 
-			availableFormats = TypeList<VkSurfaceFormatKHR>(formatCount);
+			availableFormats = Shrub<VkSurfaceFormatKHR>(formatCount);
 			vkGetPhysicalDeviceSurfaceFormatsKHR(Application::physicalDevice_.device, window_T.surface, &formatCount, availableFormats.data());
 
 			uint32_t presentModeCount;
 			vkGetPhysicalDeviceSurfacePresentModesKHR(Application::physicalDevice_.device, window_T.surface, &presentModeCount, nullptr);
 
-			availablePresentModes = TypeList<VkPresentModeKHR>(presentModeCount);
+			availablePresentModes = Shrub<VkPresentModeKHR>(presentModeCount);
 			vkGetPhysicalDeviceSurfacePresentModesKHR(Application::physicalDevice_.device, window_T.surface, &presentModeCount, availablePresentModes.data());
 		}
 
@@ -241,10 +241,10 @@ namespace blueberry
 		// R�cup�re les images de la swapchain
 		vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window_T.swapchain, &imageCount, nullptr);
 
-		window_T.images = TypeList<VkImage>(imageCount);
+		window_T.images = Shrub<VkImage>(imageCount);
 		vkGetSwapchainImagesKHR(Application::logicalDevice_.device, window_T.swapchain, &imageCount, window_T.images.data());
 
-		window_T.imageViews = TypeList<VkImageView>(imageCount);
+		window_T.imageViews = Shrub<VkImageView>(imageCount);
 
 		// Cr�e les images views
 		VkImageViewCreateInfo imageViewCreateInfo{};
@@ -271,7 +271,7 @@ namespace blueberry
 			}
 		}
 
-		window_T.framebuffers = TypeList<VkFramebuffer>(window_T.imageViews.size());
+		window_T.framebuffers = Shrub<VkFramebuffer>(window_T.imageViews.size());
 		for (size_t i = 0; i < window_T.imageViews.size(); i++)
 		{
 			VkFramebufferCreateInfo framebufferInfo{};
@@ -289,8 +289,8 @@ namespace blueberry
 			}
 		}
 
-		window_T.imageAvailableSemaphores = TypeList<VkSemaphore>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
-		window_T.renderFinishedSemaphores = TypeList<VkSemaphore>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		window_T.imageAvailableSemaphores = Shrub<VkSemaphore>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
+		window_T.renderFinishedSemaphores = Shrub<VkSemaphore>(BLUEBERRY_MAX_FRAMES_IN_FLIGHT);
 
 		for (int i = 0; i < BLUEBERRY_MAX_FRAMES_IN_FLIGHT; i++)
 		{

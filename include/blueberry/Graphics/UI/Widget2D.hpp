@@ -21,10 +21,10 @@ namespace blueberry
 	{
 	protected:
 
-		static TypeList<Widget2D*> widgets_;
+		static Shrub<Widget2D*> widgets_;
 
-		static TypeList<uint32_t> freeIndices_;
-		static TypeList<uint32_t> generations_;
+		static Shrub<uint32_t> freeIndices_;
+		static Shrub<uint32_t> generations_;
 
 		uint32_t index_ = -1;
 		uint32_t generation_ = -1;

@@ -17,10 +17,10 @@ namespace blueberry
 	private:
 
 		struct Pipeline_T;
-		static TypeList<Pipeline_T> pipelines_;
+		static Shrub<Pipeline_T> pipelines_;
 
-		static TypeList<uint32_t> freeIndices_;
-		static TypeList<uint32_t> generations_;
+		static Shrub<uint32_t> freeIndices_;
+		static Shrub<uint32_t> generations_;
 
 		uint32_t index_ = -1;
 		uint32_t generation_ = -1;
@@ -32,7 +32,7 @@ namespace blueberry
 	public:
 
 		Pipeline();
-		Pipeline(TypeList<Shader>&& shaders, PipelineType type);
+		Pipeline(Shrub<Shader>&& shaders, PipelineType type);
 
 	};
 }
